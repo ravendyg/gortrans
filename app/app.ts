@@ -19,16 +19,28 @@ class MyApp implements OnInit {
   public app: any;
   rootPage: any = MapPage;
 
-  // private _routes: routeType [];
+  public buses: any [];
+  public smallBuses: any [];
+  public trams: any [];
+  public trolleys: any [];
+
+  public routeName: string;
+
+  private _routes: routesType;
 
   constructor(
     private platform: Platform,
     private menu: MenuController
-    ,
-
-    private _gortransService: GortransApiService
+    ,private _gortransService: GortransApiService
   ) {
     this.initializeApp();
+
+    this.buses = [];
+    this.smallBuses = [];
+    this.trams = [];
+    this.trolleys = [];
+
+    this.routeName = '';
   }
 
   initializeApp() {
@@ -48,18 +60,31 @@ class MyApp implements OnInit {
       },
       100
     );
-
   }
 
   public ngOnInit (): void
   {
-    // this._gortransService
-    //   .getRoutes()
-    //   .subscribe(
-    //     routes => this._routes = routes,
-    //     err => console.log(err)
-    //   )
-    //   ;
+    this._gortransService.getRoutes(
+      routes =>
+      {
+        this._routes = routes;
+      }
+    );
+  }
+
+  public onSearchInput ()
+  {
+    if (this.routeName.length > 0)
+    {
+      this.buses = this._routes.buses.filter( e => !!e.name.match(this.routeName) );
+      this.smallBuses = this._routes.smallBuses.filter( e => !!e.name.match(this.routeName) );
+      this.trams = this._routes.trams.filter( e => !!e.name.match(this.routeName) );
+      this.trolleys = this._routes.trolleys.filter( e => !!e.name.match(this.routeName) );
+    }
+    else
+    {
+      this.buses = this.smallBuses = this.trams = this.trolleys = [];
+    }
   }
 
   // openPage(page)
