@@ -6,12 +6,12 @@ import {StatusBar} from 'ionic-native';
 import {MapPage} from './pages/map/map';
 import {ListPage} from './pages/list/list';
 
-// import {GortransApiService} from './services/gortrans-api-service';
+import {GortransApiService} from './services/gortrans-api-service';
 
 
 @Component({
   templateUrl: 'build/app.html',
-  providers: [HTTP_PROVIDERS ]
+  providers: [HTTP_PROVIDERS, GortransApiService]
 })
 class MyApp implements OnInit {
   @ViewChild(Nav) nav: Nav;
@@ -24,9 +24,9 @@ class MyApp implements OnInit {
   constructor(
     private platform: Platform,
     private menu: MenuController
-    // ,
+    ,
 
-    // private _gortransService: GortransApiService
+    private _gortransService: GortransApiService
   ) {
     this.initializeApp();
   }
@@ -37,8 +37,18 @@ class MyApp implements OnInit {
       // Here you can do any higher level native things you might need.
       StatusBar.styleDefault();
     });
+    var menuInter = setInterval(
+      () =>
+      {
+        if (this.menu.getMenus().length > 0)
+        {
+          this._registerBackButtonMenuHandler();
+          clearInterval(menuInter);
+        }
+      },
+      100
+    );
 
-    this._registerBackButtonMenuHandler();
   }
 
   public ngOnInit (): void
