@@ -1,33 +1,34 @@
-import {Component, ViewChild} from '@angular/core';
+import {Component, ViewChild, OnInit} from '@angular/core';
+import { HTTP_PROVIDERS } from '@angular/http';
+import 'rxjs/Rx';
 import {ionicBootstrap, Platform, MenuController, Nav} from 'ionic-angular';
 import {StatusBar} from 'ionic-native';
 import {MapPage} from './pages/map/map';
 import {ListPage} from './pages/list/list';
 
+// import {GortransApiService} from './services/gortrans-api-service';
+
 
 @Component({
-  templateUrl: 'build/app.html'
+  templateUrl: 'build/app.html',
+  providers: [HTTP_PROVIDERS ]
 })
-class MyApp {
+class MyApp implements OnInit {
   @ViewChild(Nav) nav: Nav;
 
   public app: any;
-
-  // make HelloIonicPage the root (or first) page
   rootPage: any = MapPage;
-  pages: Array<{title: string, component: any}>;
+
+  // private _routes: routeType [];
 
   constructor(
     private platform: Platform,
     private menu: MenuController
+    // ,
+
+    // private _gortransService: GortransApiService
   ) {
     this.initializeApp();
-
-    // set our app's pages
-    this.pages = [
-      { title: 'Map', component: MapPage },
-      // { title: 'My First List', component: ListPage }
-    ];
   }
 
   initializeApp() {
@@ -35,18 +36,29 @@ class MyApp {
       // Okay, so the platform is ready and our plugins are available.
       // Here you can do any higher level native things you might need.
       StatusBar.styleDefault();
-
-      this._registerBackButtonMenuHandler();
     });
+
+    this._registerBackButtonMenuHandler();
   }
 
-  openPage(page)
+  public ngOnInit (): void
   {
-    // close the menu when clicking a link from the menu
-    this.menu.close();
-    // navigate to the new page if it is not the current page
-    this.nav.setRoot(page.component);
+    // this._gortransService
+    //   .getRoutes()
+    //   .subscribe(
+    //     routes => this._routes = routes,
+    //     err => console.log(err)
+    //   )
+    //   ;
   }
+
+  // openPage(page)
+  // {
+  //   // close the menu when clicking a link from the menu
+  //   this.menu.close();
+  //   // navigate to the new page if it is not the current page
+  //   this.nav.setRoot(page.component);
+  // }
 
   private _registerBackButtonMenuHandler()
   {
