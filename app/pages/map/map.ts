@@ -7,16 +7,21 @@ import {TransportService} from '../../services/transport-service';
 })
 export class MapPage implements OnInit, AfterViewChecked
 {
-  private _L: any;
+  private _L: iL;
   private _map: iMap;
   private _trackMapSize: boolean;
-  private _actualRouteLines: { [id: string]: iPolyline };
+  private _actualRouteLines: actualRoute;
+
+  // constants
+  private _stopRadius: number;
   // private _routeColors: string [];
 
   constructor(private _transportService: TransportService)
   {
     this._trackMapSize = true;
     this._actualRouteLines = {};
+
+    this._stopRadius = 15;
 
     // this._routeColors = ['blue', 'green', 'red'];
   }
@@ -28,7 +33,7 @@ export class MapPage implements OnInit, AfterViewChecked
     const southWest = this._L.latLng(30, 10),
           northEast = this._L.latLng(80, 200),
           bounds = this._L.latLngBounds(southWest, northEast);
-    const startCoords = [54.908593335436926, 83.0291748046875];
+    const startCoords = {lat: 54.908593335436926, lng: 83.0291748046875};
     const startZoom = 11;
 
     this._map = this._L.map('map', {
@@ -80,7 +85,9 @@ window['mm'] = this._map;
   {
     if (this._actualRouteLines[id])
     {
-      this._map.removeLayer(this._actualRouteLines[id]);
+      this._actualRouteLines[id].stops
+        .forEach( e => this._map.removeLayer(e.marker) );
+      this._map.removeLayer(this._actualRouteLines[id].route);
     }
   }
 
@@ -89,8 +96,40 @@ window['mm'] = this._map;
    */
   private _addRouteOnMap (id: string, trass: trassPoint []): void
   {
-    this._actualRouteLines[id] = this._L.polyline(trass, {color: 'blue'}).addTo(this._map);
-    this._map.fitBounds(this._actualRouteLines[id].getBounds());
+    const stops = trass
+      .filter( e => !!e.id )
+      .map( e => _createStopMarker.bind(this)(e) )
+      ;
+    this._actualRouteLines[id] =
+    {
+      route: this._L.polyline(trass, {color: 'blue'}).addTo(this._map),
+      stops
+    };
+    this._map.fitBounds(this._actualRouteLines[id].route.getBounds());
+
+    // not pure !!!
+    function _createStopMarker (e)
+    {
+      const marker = this._L
+        .circle(e, this._stopRadius,
+          {
+            fill: true,
+            // radius: this._stopRadius,
+            fillOpacity: 1
+          }
+        )
+        .bindPopup(e.n)
+        .addTo(this._map)
+        ;
+      const out =
+      {
+        id: e.id,
+        marker: marker
+      };
+      return out;
+    }
   }
+
+
 
 }

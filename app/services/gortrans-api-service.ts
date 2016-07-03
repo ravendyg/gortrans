@@ -116,7 +116,15 @@ class GortransApiService implements OnInit{
 				(resp: Response) =>
 				{
 					const parsedRes = <trassPointsResponse>resp.json();
-					return parsedRes.trasses[0].r[0].u;
+					return parsedRes.trasses[0].r[0].u
+						.map(
+							e =>
+							{
+								e.lat = +e.lat;
+								e.lng = +e.lng;
+								return e;
+							}
+						);
 				}
 			)
 			.catch( this._handleHttpError )
