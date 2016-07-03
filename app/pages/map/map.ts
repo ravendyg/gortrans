@@ -1,4 +1,5 @@
 import {Component} from '@angular/core';
+// import {leaflet} from 'leaflet/src';
 
 @Component({
   templateUrl: 'build/pages/map/map.html'
