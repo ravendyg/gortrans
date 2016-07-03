@@ -1,5 +1,4 @@
 <ion-menu [content]="content">
-
   <ion-toolbar>
     <ion-title>Поиск маршрута</ion-title>
   </ion-toolbar>
@@ -13,40 +12,46 @@
 
   <ion-content>
     <ion-list *ngIf="buses.length > 0">
-      <ion-list-header>
+      <ion-list-header (click)="hideBuses = ! hideBuses">
         Автобусы
+        <ion-icon name="arrow-dropdown" class="route-list-arrow" [hidden]="hideBuses"></ion-icon>
+        <ion-icon name="arrow-dropright" class="route-list-arrow" [hidden]="!hideBuses"></ion-icon>
       </ion-list-header>
-      <ion-item *ngFor="let bus of buses">
+      <ion-item *ngFor="let bus of buses" [hidden]="hideBuses">
         {{bus.name}}
       </ion-item>
     </ion-list>
     <ion-list *ngIf="smallBuses.length > 0">
-      <ion-list-header>
+      <ion-list-header (click)="hideSmallBuses = ! hideSmallBuses">
         Маршрутки
+        <ion-icon name="arrow-dropdown" class="route-list-arrow" [hidden]="hideSmallBuses"></ion-icon>
+        <ion-icon name="arrow-dropright" class="route-list-arrow" [hidden]="!hideSmallBuses"></ion-icon>
       </ion-list-header>
-      <ion-item *ngFor="let smallBus of smallBuses">
+      <ion-item *ngFor="let smallBus of smallBuses" [hidden]="hideSmallBuses">
         {{smallBus.name}}
       </ion-item>
     </ion-list>
     <ion-list *ngIf="trolleys.length > 0">
-      <ion-list-header>
+      <ion-list-header (click)="hideTrolleys = ! hideTrolleys">
         Троллейбусы
+        <ion-icon name="arrow-dropdown" class="route-list-arrow" [hidden]="hideTrolleys"></ion-icon>
+        <ion-icon name="arrow-dropright" class="route-list-arrow" [hidden]="!hideTrolleys"></ion-icon>
       </ion-list-header>
-      <ion-item *ngFor="let smallBus of trolleys">
+      <ion-item *ngFor="let smallBus of trolleys" [hidden]="hideTrolleys">
         {{smallBus.name}}
       </ion-item>
     </ion-list>
     <ion-list *ngIf="trams.length > 0">
-      <ion-list-header>
+      <ion-list-header (click)="hideTrams = ! hideTrams">
         Трамваи
+        <ion-icon name="arrow-dropdown" class="route-list-arrow" [hidden]="hideTrams"></ion-icon>
+        <ion-icon name="arrow-dropright" class="route-list-arrow" [hidden]="!hideTrams"></ion-icon>
       </ion-list-header>
-      <ion-item *ngFor="let smallBus of trams">
+      <ion-item *ngFor="let smallBus of trams" [hidden]="hideTrams">
         {{smallBus.name}}
       </ion-item>
     </ion-list>
   </ion-content>
-  <!--(click)="openPage(p)-->
-
 </ion-menu>
 
 <ion-nav [root]="rootPage" #content swipe-back-enabled="false"></ion-nav>
