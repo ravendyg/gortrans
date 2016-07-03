@@ -12,7 +12,7 @@
 
   <ion-content>
     <ion-list *ngIf="buses.length > 0">
-      <ion-list-header (click)="hideBuses = ! hideBuses">
+      <ion-list-header class="route-list-header" (click)="hideBuses = ! hideBuses">
         Автобусы
         <ion-icon name="arrow-dropdown" class="route-list-arrow" [hidden]="hideBuses"></ion-icon>
         <ion-icon name="arrow-dropright" class="route-list-arrow" [hidden]="!hideBuses"></ion-icon>
@@ -22,7 +22,7 @@
       </ion-item>
     </ion-list>
     <ion-list *ngIf="smallBuses.length > 0">
-      <ion-list-header (click)="hideSmallBuses = ! hideSmallBuses">
+      <ion-list-header class="route-list-header" (click)="hideSmallBuses = ! hideSmallBuses">
         Маршрутки
         <ion-icon name="arrow-dropdown" class="route-list-arrow" [hidden]="hideSmallBuses"></ion-icon>
         <ion-icon name="arrow-dropright" class="route-list-arrow" [hidden]="!hideSmallBuses"></ion-icon>
@@ -32,7 +32,7 @@
       </ion-item>
     </ion-list>
     <ion-list *ngIf="trolleys.length > 0">
-      <ion-list-header (click)="hideTrolleys = ! hideTrolleys">
+      <ion-list-header class="route-list-header" (click)="hideTrolleys = ! hideTrolleys">
         Троллейбусы
         <ion-icon name="arrow-dropdown" class="route-list-arrow" [hidden]="hideTrolleys"></ion-icon>
         <ion-icon name="arrow-dropright" class="route-list-arrow" [hidden]="!hideTrolleys"></ion-icon>
@@ -42,7 +42,7 @@
       </ion-item>
     </ion-list>
     <ion-list *ngIf="trams.length > 0">
-      <ion-list-header (click)="hideTrams = ! hideTrams">
+      <ion-list-header class="route-list-header" (click)="hideTrams = ! hideTrams">
         Трамваи
         <ion-icon name="arrow-dropdown" class="route-list-arrow" [hidden]="hideTrams"></ion-icon>
         <ion-icon name="arrow-dropright" class="route-list-arrow" [hidden]="!hideTrams"></ion-icon>
