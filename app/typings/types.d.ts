@@ -48,3 +48,37 @@ declare type latLng =
 	lng: number,
 	alt?: number
 };
+
+interface iMap
+{
+	setView: (center: latLng, zoom?: number, zpOptions?: zoomPanOptions) => iMap;
+	_container: HTMLDivElement;
+	invalidateSize: () => iMap;
+	removeLayer: (layer: iLayer) => iMap;
+}
+
+interface iLayer
+{
+
+}
+
+declare type zoomPanOptions =
+{
+	reset?: boolean,
+	pan: panOptions,
+	zoom: zoomOption,
+	animate: boolean
+};
+
+declare type panOptions =
+{
+	animate?: boolean,
+	duration?: number,
+	easeLinearity?: number,
+	noMoveStart?: boolean
+};
+
+declare type zoomOption =
+{
+	animate: boolean
+};
