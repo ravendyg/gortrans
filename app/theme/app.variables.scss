@@ -39,3 +39,18 @@ $colors: (
   float: right;
   padding-right: 20px;
 }
+
+#map-wrapper
+{
+  padding: 0;
+  scroll-content
+  {
+    padding: 0;
+  }
+}
+
+#map
+{
+  height: 100%;
+  width: 100%;
+}
