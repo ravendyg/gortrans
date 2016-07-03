@@ -42,14 +42,20 @@ class TransportService implements OnInit {
   private _getRouteLinesCallback (id: string, trass: trassPoint []): void
   {
     var instead: string = null;
+    // check whether it's realy new line
+    var lineIsNew: boolean =
+      this._routeLinesOnMap.reduce(
+        (acc, e) => e.id === id ? false : true,
+        true
+      );
     // check whether there is space for a new line, if not - FIFO
-    if (this._routeLinesOnMap.length < this._linesLimit)
+    if (lineIsNew && this._routeLinesOnMap.length < this._linesLimit)
     {
       this._routeLinesOnMap = this._routeLinesOnMap
         .concat( { id, trass } )
         ;
     }
-    else
+    else if (lineIsNew)
     {
       instead = this._routeLinesOnMap[0].id;
       this._routeLinesOnMap = this._routeLinesOnMap
@@ -59,7 +65,10 @@ class TransportService implements OnInit {
     }
 
     // call subscribers
-    this._runLinesOnMapChangeSubs(id, trass, instead);
+    if (lineIsNew)
+    {
+      this._runLinesOnMapChangeSubs(id, trass, instead);
+    }
   }
 
   public getLines (): { id: string, trass: trassPoint [] } []
