@@ -8,11 +8,11 @@ import {TransportService} from '../../services/transport-service';
 export class MapPage implements OnInit, AfterViewChecked
 {
   private _L: any;
-  private _map: any;
+  private _map: iMap;
 
   private _trackMapSize: boolean;
 
-  private _actualRouteLines: { [id: string]: any };
+  private _actualRouteLines: { [id: string]: iLayer };
 
   constructor(private _transportService: TransportService)
   {
@@ -77,7 +77,10 @@ window['mm'] = this._map;
    */
   private _removeRouteOnMap (id: string): void
   {
-    console.log('remove: ' + id);
+    if (this._actualRouteLines[id])
+    {
+      this._map.removeLayer(this._actualRouteLines[id]);
+    }
   }
 
   /**
@@ -85,9 +88,7 @@ window['mm'] = this._map;
    */
   private _addRouteOnMap (id: string, trass: trassPoint []): void
   {
-    // var polyline = this._L.polyline(latlngs, {color: 'red'}).addTo(map);
-    console.log('add: ' + id);
-    console.log(trass);
+    this._actualRouteLines[id] = this._L.polyline(trass, {color: 'red'}).addTo(this._map);
   }
 
 }

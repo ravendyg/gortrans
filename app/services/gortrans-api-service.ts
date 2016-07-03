@@ -94,7 +94,6 @@ class GortransApiService implements OnInit{
 		}
 	}
 
-
 	// get list of routes from gortrans
 	private _getRoutes (): Observable<marshListResponse []>
 	{

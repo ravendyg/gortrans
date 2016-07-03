@@ -33,10 +33,6 @@ class TransportService implements OnInit {
   public selectRoute (marsh: string, type: number): void
   {
     this._gortransService.getRouteLine(marsh, type, this._getRouteLinesCallback.bind(this) )
-    // check correctness
-    // remove current
-    // request route curve
-    // request cars positions
   }
 
   private _getRouteLinesCallback (id: string, trass: trassPoint []): void
