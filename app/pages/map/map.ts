@@ -1,5 +1,7 @@
 import {Component, OnInit, AfterViewChecked} from '@angular/core';
 
+import {TransportService} from '../../services/transport-service';
+
 @Component({
   templateUrl: 'build/pages/map/map.html'
 })
@@ -10,13 +12,17 @@ export class MapPage implements OnInit, AfterViewChecked
 
   private _trackMapSize: boolean;
 
-  constructor()
+  private _actualRouteLines: { [id: string]: any };
+
+  constructor(private _transportService: TransportService)
   {
     this._trackMapSize = true;
+    this._actualRouteLines = {};
   }
 
   public ngOnInit (): void
   {
+    // map intialization
     this._L = window['L'];
     const southWest = this._L.latLng(30, 10),
           northEast = this._L.latLng(80, 200),
@@ -33,6 +39,11 @@ window['mm'] = this._map;
 
     document.querySelector('.leaflet-control-zoom').remove();
     document.querySelector('.leaflet-control-attribution').remove();
+
+    // subscribe to searched routes updates
+    this._transportService.subscribeForAddLineOnMap(
+      this._newLineOnMapCb.bind(this)
+    );
   }
 
   public ngAfterViewChecked (): void
@@ -46,8 +57,37 @@ window['mm'] = this._map;
     }
   }
 
-  public openMenu (): void
+  // public openMenu (): void
+  // {
+  //   // location.hash = 'menu';
+  // }
+
+  private _newLineOnMapCb (id: string, trass: trassPoint [], instead: string): void
   {
-    // location.hash = 'menu';
+    if (instead)
+    {
+      this._removeRouteOnMap(instead);
+    }
+
+    this._addRouteOnMap(id, trass);
   }
+
+  /**
+   * remove route polyline from the map and from memory
+   */
+  private _removeRouteOnMap (id: string): void
+  {
+    console.log('remove: ' + id);
+  }
+
+  /**
+   * create route polyline and display it on the map
+   */
+  private _addRouteOnMap (id: string, trass: trassPoint []): void
+  {
+    // var polyline = this._L.polyline(latlngs, {color: 'red'}).addTo(map);
+    console.log('add: ' + id);
+    console.log(trass);
+  }
+
 }

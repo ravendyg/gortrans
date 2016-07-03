@@ -4,14 +4,13 @@ import 'rxjs/Rx';
 import {ionicBootstrap, Platform, MenuController, Nav} from 'ionic-angular';
 import {StatusBar} from 'ionic-native';
 import {MapPage} from './pages/map/map';
-import {ListPage} from './pages/list/list';
 
 import {GortransApiService} from './services/gortrans-api-service';
+import {TransportService} from './services/transport-service';
 
 
 @Component({
-  templateUrl: 'build/app.html',
-  providers: [HTTP_PROVIDERS, GortransApiService]
+  templateUrl: 'build/app.html'
 })
 class MyApp implements OnInit {
   @ViewChild(Nav) nav: Nav;
@@ -24,14 +23,17 @@ class MyApp implements OnInit {
   public trams: any [];
   public trolleys: any [];
 
-  public routeName: string;
+  public searchRouteName: string;
 
   private _routes: routesType;
+
+
 
   constructor(
     private platform: Platform,
     private menu: MenuController,
-    private _gortransService: GortransApiService
+    private _gortransService: GortransApiService,
+    private _transportService: TransportService
   ) {
     this.initializeApp();
 
@@ -40,7 +42,7 @@ class MyApp implements OnInit {
     this.trams = [];
     this.trolleys = [];
 
-    this.routeName = '';
+    this.searchRouteName = '';
   }
 
   initializeApp (): void
@@ -76,17 +78,22 @@ class MyApp implements OnInit {
 
   public onSearchInput (): void
   {
-    if (this.routeName.length > 0)
+    if (this.searchRouteName.length > 0)
     {
-      this.buses = this._routes.buses.filter( e => !!e.name.match(this.routeName) );
-      this.smallBuses = this._routes.smallBuses.filter( e => !!e.name.match(this.routeName) );
-      this.trams = this._routes.trams.filter( e => !!e.name.match(this.routeName) );
-      this.trolleys = this._routes.trolleys.filter( e => !!e.name.match(this.routeName) );
+      this.buses = this._routes.buses.filter( e => !!e.name.match(this.searchRouteName) );
+      this.smallBuses = this._routes.smallBuses.filter( e => !!e.name.match(this.searchRouteName) );
+      this.trams = this._routes.trams.filter( e => !!e.name.match(this.searchRouteName) );
+      this.trolleys = this._routes.trolleys.filter( e => !!e.name.match(this.searchRouteName) );
     }
     else
     {
       this.buses = this.smallBuses = this.trams = this.trolleys = [];
     }
+  }
+
+  public selectRoute (marsh: string, type: number): void
+  {
+    this._transportService.selectRoute(marsh, type);
   }
 
   // openPage(page)
@@ -130,4 +137,4 @@ class MyApp implements OnInit {
   }
 }
 
-ionicBootstrap(MyApp);
+ionicBootstrap(MyApp, [HTTP_PROVIDERS, GortransApiService, TransportService]);

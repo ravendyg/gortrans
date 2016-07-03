@@ -11,22 +11,26 @@ export /**
 class GortransApiService implements OnInit{
 
 	private _echoUrl: string;
-	private _listmarsh: string;
+	private _listMarsh: string;
+	private _listTrasses: string;
 
 	private _routes: routesType;
 
+	private _lines: { [id: string]: trassPoint [] };
 
 	constructor(private _http: Http)
 	{
 		this._echoUrl = 'http://excur.info:3006';
-		this._listmarsh = '?url=http://maps.nskgortrans.ru/listmarsh.php?r&r=true';
+		this._listMarsh = '?url=http://maps.nskgortrans.ru/listmarsh.php?r&r=true';
+		this._listTrasses = '?url=http://maps.nskgortrans.ru/trasses.php?r=';
+		this._lines = {};
 	}
 
 	public ngOnInit (): void
 	{
 	}
 
-	public getRoutes (cb): void
+	public getRoutes (cb: any): void
 	{
 		if (this._routes)
 		{
@@ -69,13 +73,60 @@ class GortransApiService implements OnInit{
 		}
 	}
 
+	public getRouteLine (marsh: string, type: number, cb: any): void
+	{
+		if (this._lines[type + '-' + marsh])
+		{	// already fetched
+			cb(this._lines[type + '-' + marsh]);
+		}
+		else
+		{
+			this._getRouteLine(type, marsh)
+			.subscribe(
+				((trass: trassPoint []) =>
+				{
+					this._lines[type + '-' + marsh] = trass;
+					cb(type + '-' + marsh, trass);
+				}).bind(this),
+				err => console.log(err)
+			)
+			;
+		}
+	}
+
+
+	// get list of routes from gortrans
 	private _getRoutes (): Observable<marshListResponse []>
 	{
 		return this._http
-			.get( this._echoUrl + this._listmarsh )
-			.map( (resp: Response) => <routeType []>resp.json() )
+			.get( this._echoUrl + this._listMarsh )
+			.map( (resp: Response) => <marshListResponse []>resp.json() )
 			.catch( this._handleHttpError )
 			;
+	}
+
+	/** get list of point for specified route
+	 * @type
+	 * @marsh - route
+	 **/
+	private _getRouteLine (type: number, marsh: string): Observable<trassPoint []>
+	{
+		return this._http
+			.get( this._echoUrl + this._getTrassUrl(type, marsh) )
+			.map(
+				(resp: Response) =>
+				{
+					const parsedRes = <trassPointsResponse>resp.json();
+					return parsedRes.trasses[0].r[0].u;
+				}
+			)
+			.catch( this._handleHttpError )
+			;
+	}
+
+	private _getTrassUrl (type: number, marsh: string): string
+	{
+		return this._listTrasses + (type+1) + '-' + marsh + '-W';
 	}
 
 	private _handleHttpError (
