@@ -77,7 +77,7 @@ class GortransApiService implements OnInit{
 	{
 		if (this._lines[type + '-' + marsh])
 		{	// already fetched
-			cb(this._lines[type + '-' + marsh]);
+			cb(type + '-' + marsh, this._lines[type + '-' + marsh]);
 		}
 		else
 		{
