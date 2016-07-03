@@ -9,15 +9,16 @@ export class MapPage implements OnInit, AfterViewChecked
 {
   private _L: any;
   private _map: iMap;
-
   private _trackMapSize: boolean;
-
-  private _actualRouteLines: { [id: string]: iLayer };
+  private _actualRouteLines: { [id: string]: iPolyline };
+  // private _routeColors: string [];
 
   constructor(private _transportService: TransportService)
   {
     this._trackMapSize = true;
     this._actualRouteLines = {};
+
+    // this._routeColors = ['blue', 'green', 'red'];
   }
 
   public ngOnInit (): void
@@ -88,7 +89,8 @@ window['mm'] = this._map;
    */
   private _addRouteOnMap (id: string, trass: trassPoint []): void
   {
-    this._actualRouteLines[id] = this._L.polyline(trass, {color: 'red'}).addTo(this._map);
+    this._actualRouteLines[id] = this._L.polyline(trass, {color: 'blue'}).addTo(this._map);
+    this._map.fitBounds(this._actualRouteLines[id].getBounds());
   }
 
 }

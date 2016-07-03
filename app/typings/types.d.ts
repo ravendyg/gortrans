@@ -55,9 +55,20 @@ interface iMap
 	_container: HTMLDivElement;
 	invalidateSize: () => iMap;
 	removeLayer: (layer: iLayer) => iMap;
+	fitBounds: (bounds: LatLngBounds, options?: fitBoundsOptions) => iMap;
 }
 
 interface iLayer
+{
+
+}
+
+interface iPath extends iLayer
+{
+	getBounds: () => LatLngBounds;
+}
+
+interface iPolyline extends iPath
 {
 
 }
@@ -81,4 +92,24 @@ declare type panOptions =
 declare type zoomOption =
 {
 	animate: boolean
+};
+
+declare type LatLngBounds ={
+	southWest: latLng,
+	nortEast: latLng
+};
+
+declare type fitBoundsOptions =
+{
+	paddingTopLeft: Point,
+	paddingBottomRight: Point,
+	padding: Point,
+	maxZoom: number
+};
+
+declare type Point =
+{
+	x: number,
+	y: number,
+	round?: boolean
 };
