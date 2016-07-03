@@ -94,6 +94,7 @@ class MyApp implements OnInit {
   public selectRoute (marsh: string, type: number): void
   {
     this._transportService.selectRoute(marsh, type);
+    this.menu.getMenus()[0].close();
   }
 
   // openPage(page)
