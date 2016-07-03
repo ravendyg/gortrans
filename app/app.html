@@ -13,33 +13,33 @@
 
   <ion-content>
     <ion-list *ngIf="buses.length > 0">
-      <ion-item>
+      <ion-list-header>
         Автобусы
-      </ion-item>
+      </ion-list-header>
       <ion-item *ngFor="let bus of buses">
         {{bus.name}}
       </ion-item>
     </ion-list>
     <ion-list *ngIf="smallBuses.length > 0">
-      <ion-item>
+      <ion-list-header>
         Маршрутки
-      </ion-item>
+      </ion-list-header>
       <ion-item *ngFor="let smallBus of smallBuses">
         {{smallBus.name}}
       </ion-item>
     </ion-list>
     <ion-list *ngIf="trolleys.length > 0">
-      <ion-item>
+      <ion-list-header>
         Троллейбусы
-      </ion-item>
+      </ion-list-header>
       <ion-item *ngFor="let smallBus of trolleys">
         {{smallBus.name}}
       </ion-item>
     </ion-list>
     <ion-list *ngIf="trams.length > 0">
-      <ion-item>
+      <ion-list-header>
         Трамваи
-      </ion-item>
+      </ion-list-header>
       <ion-item *ngFor="let smallBus of trams">
         {{smallBus.name}}
       </ion-item>

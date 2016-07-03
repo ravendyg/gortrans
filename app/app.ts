@@ -30,8 +30,8 @@ class MyApp implements OnInit {
 
   constructor(
     private platform: Platform,
-    private menu: MenuController
-    ,private _gortransService: GortransApiService
+    private menu: MenuController,
+    private _gortransService: GortransApiService
   ) {
     this.initializeApp();
 
@@ -43,12 +43,17 @@ class MyApp implements OnInit {
     this.routeName = '';
   }
 
-  initializeApp() {
+  initializeApp (): void
+  {
     this.platform.ready().then(() => {
       // Okay, so the platform is ready and our plugins are available.
       // Here you can do any higher level native things you might need.
       StatusBar.styleDefault();
     });
+  }
+
+  public ngOnInit (): void
+  { // try to set up 'close menu on back button'
     var menuInter = setInterval(
       () =>
       {
@@ -60,10 +65,7 @@ class MyApp implements OnInit {
       },
       100
     );
-  }
-
-  public ngOnInit (): void
-  {
+    // get list of marsh
     this._gortransService.getRoutes(
       routes =>
       {
@@ -72,7 +74,7 @@ class MyApp implements OnInit {
     );
   }
 
-  public onSearchInput ()
+  public onSearchInput (): void
   {
     if (this.routeName.length > 0)
     {
