@@ -122,6 +122,11 @@ class MyApp implements OnInit {
           },
           10
         );
+        // set tel input, default didn't work
+        (<HTMLInputElement>document
+          .getElementById('route-search')
+          .querySelector('.searchbar-input')
+        ).type = 'tel';
       }
     );
     // remove listener when closed

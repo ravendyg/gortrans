@@ -1,7 +1,7 @@
 /// <reference path="../typings/ref.d.ts" />
 
 import { Injectable, OnInit } from '@angular/core';
-// import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs/Observable';
 
 import {GortransApiService} from './gortrans-api-service';
 
@@ -17,6 +17,11 @@ class TransportService implements OnInit {
   private _addLineOnMapSubId: number;
   private _addLineOnMapSubs: any;
 
+  private _busWatcherId: number;
+
+  private _markerSubsCounter: number;
+  private _markerSubs: any;
+
 	constructor(private _gortransService: GortransApiService)
 	{
     this._linesLimit = 1;
@@ -24,6 +29,11 @@ class TransportService implements OnInit {
 
     this._addLineOnMapSubId = 1;
     this._addLineOnMapSubs = {};
+
+    this._markerSubsCounter = 0;
+    this._markerSubs = {};
+
+    this._busWatcherId = -1;
 	}
 
 	public ngOnInit (): void
@@ -64,6 +74,7 @@ class TransportService implements OnInit {
     if (lineIsNew)
     {
       this._runLinesOnMapChangeSubs(id, trass, instead);
+      this._startWatchingBuses();
     }
   }
 
@@ -82,6 +93,12 @@ class TransportService implements OnInit {
     return () => delete this._addLineOnMapSubs[this._addLineOnMapSubId - 1];
   }
 
+  public subscribeForMarkers (cb: any)
+  {
+    this._markerSubs[this._markerSubsCounter++] = cb;
+    return () => delete this._markerSubs[this._markerSubsCounter - 1];
+  }
+
   /**
    * call subscribed callbacks
    * @id - new line id
@@ -94,6 +111,52 @@ class TransportService implements OnInit {
     {
       this._addLineOnMapSubs[key](id, trass, instead);
     }
+  }
+
+  private _getMarkers ()
+  {
+    if (this._routeLinesOnMap.length === 0) { return; }
+
+    const routes = this._routeLinesOnMap.map( e => e.id );
+
+    this._gortransService.getMarkers(routes,
+      ((buses: busData []) =>
+      {
+        // if (buses.length === 0) { return; }
+        // (type + 1) + '-' + marsh
+        const separatedBuses = buses.reduce(
+          (pv, cv) =>
+          {
+            pv[cv.idTypetr + '-' + cv.marsh] = pv[cv.idTypetr + '-' + cv.marsh] || [];
+            pv[cv.idTypetr + '-' + cv.marsh].push(cv);
+            return pv;
+          },
+          {}
+        );
+
+        for (var key in this._markerSubs)
+        {
+          this._markerSubs[key](separatedBuses);
+        }
+      }).bind(this)
+    );
+  }
+
+  private _startWatchingBuses ()
+  {
+    this._stopWatchingBuses();
+
+    this._getMarkers();
+
+    this._busWatcherId = setInterval(
+      this._getMarkers.bind(this),
+      1000 * 40 // every 40 sec
+    )
+  }
+
+  private _stopWatchingBuses ()
+  {
+    clearInterval(this._busWatcherId);
   }
 
 }

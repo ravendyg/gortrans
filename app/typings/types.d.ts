@@ -62,139 +62,36 @@ declare type actualRoute =
 	}
 };
 
-interface iL
+declare type busData =
 {
-	polyline: (latlngs: latLng [], polylineOptions?: polylineOptions) => iPolyline;
-	circle: (latlng: latLng, radius: number, options?: pathOptions) => iCircle;
-	circleMarker: (latlng: latLng, options?: pathOptions) => iCircleMarker;
-	latLng: (lat: number, lng: number) => latLng;
-	latLngBounds: (southWest: latLng, northEast: latLng) => LatLngBounds;
-	map: (id: string, options?: mapOptions) => iMap;
-	tileLayer: any;
-}
-
-interface iMap
-{
-	setView: (center: latLng, zoom?: number, zpOptions?: zoomPanOptions) => this;
-	_container: HTMLDivElement;
-	invalidateSize: () => this;
-	removeLayer: (layer: iLayer) => this;
-	fitBounds: (bounds: LatLngBounds, options?: fitBoundsOptions) => this;
-}
-
-interface iLayer
-{
-}
-
-interface iMarker
-{
-	bindPopup: (content: string) => this;
-	openPopup: () => this;
-}
-
-interface iPath extends iLayer
-{
-	getBounds: () => LatLngBounds;
-	addTo: (iMap) => this;
-}
-
-interface iPolyline extends iPath
-{
-
-}
-
-interface iCircle extends iPath
-{
-}
-
-interface iCircleMarker extends iCircle, iMarker
-{
-}
-
-interface pathOptions
-{
-	stroke?: boolean,
-	color?: string,
-	weight?: number,
-	opacity?: number,
-	fill?: boolean,
-	fillOpacity?: number,
-	fillRule?: string,
-	dashArray?: string,
-	lineCap?: string,
-	lineJoin?: string,
-	clickable?: boolean,
-	pointerEvents?: string,
-	className?: string,
-	radius?: number
-}
-
-interface polylineOptions extends pathOptions
-{
-	smoothFactor?: number,
-	noClip?: boolean
-}
-
-declare type zoomPanOptions =
-{
-	reset?: boolean,
-	pan: panOptions,
-	zoom: zoomOption,
-	animate: boolean
+	title: string,
+	idTypetr: string,
+	marsh: string,
+	graph: number,
+	direction: string,
+	lat: number,
+	lng: number,
+	time_nav: number,
+	azimuth: number,
+	rasp: string,
+	speed: number,
+	segmentOrder: string,
+	ramp: string
 };
 
-declare type panOptions =
+declare type busDataResponse =
 {
-	animate?: boolean,
-	duration?: number,
-	easeLinearity?: number,
-	noMoveStart?: boolean
+	title: string,
+	id_typetr: string,
+	marsh: string,
+	graph: string,
+	direction: string,
+	lat: string,
+	lng: string,
+	time_nav: string,
+	azimuth: string,
+	rasp: string,
+	speed: string,
+	segment_order: string,
+	ramp: string
 };
-
-declare type zoomOption =
-{
-	animate: boolean
-};
-
-declare type LatLngBounds ={
-	southWest: latLng,
-	nortEast: latLng
-};
-
-declare type fitBoundsOptions =
-{
-	paddingTopLeft: Point,
-	paddingBottomRight: Point,
-	padding: Point,
-	maxZoom: number
-};
-
-declare type Point =
-{
-	x: number,
-	y: number,
-	round?: boolean
-};
-
-interface mapOptions extends mapStateOptions, interactionOptions, keyboardNavigationOptions
-{
-}
-
-interface mapStateOptions
-{
-	center?: latLng;
-	zoom?: number;
-	minZoom?: number;
-	maxZoom?: number;
-	maxBounds?: LatLngBounds;
-}
-
-interface interactionOptions
-{
-
-}
-
-interface keyboardNavigationOptions
-{
-
-}

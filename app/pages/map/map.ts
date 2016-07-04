@@ -12,6 +12,8 @@ export class MapPage implements OnInit, AfterViewChecked
   private _trackMapSize: boolean;
   private _actualRouteLines: actualRoute;
 
+  private _buses: any [];
+
   // constants
   private _stopRadius: number;
   // private _routeColors: string [];
@@ -22,6 +24,8 @@ export class MapPage implements OnInit, AfterViewChecked
     this._actualRouteLines = {};
 
     this._stopRadius = 15;
+
+    this._buses = [];
 
     // this._routeColors = ['blue', 'green', 'red'];
   }
@@ -50,6 +54,10 @@ window['mm'] = this._map;
     this._transportService.subscribeForAddLineOnMap(
       this._newLineOnMapCb.bind(this)
     );
+
+    this._transportService.subscribeForMarkers(
+      this._processBusMarkers.bind(this)
+    );
   }
 
   public ngAfterViewChecked (): void
@@ -63,10 +71,35 @@ window['mm'] = this._map;
     }
   }
 
-  // public openMenu (): void
-  // {
-  //   // location.hash = 'menu';
-  // }
+  private _processBusMarkers ( markers: {[id: string]: busData []} )
+  {
+    console.log(markers);
+
+    this._buses.map(
+      ( e => this._map.removeLayer(e.marker) ).bind(this)
+    );
+
+    for (var key in markers)
+    {
+      if ( this._actualRouteLines[key] )
+      { // haven't yet removed corresponding line
+        markers[key].map(
+          (e =>
+          {
+            const marker = this._L
+              .marker({lat: e.lat, lng: e.lng})
+              .bindPopup(e.title)
+              .addTo(this._map)
+              ;
+            this._buses.push({
+              id: key,
+              marker
+            });
+          }).bind(this)
+        );
+      }
+    }
+  }
 
   private _newLineOnMapCb (id: string, trass: trassPoint [], instead: string): void
   {
@@ -74,7 +107,6 @@ window['mm'] = this._map;
     {
       this._removeRouteOnMap(instead);
     }
-
     this._addRouteOnMap(id, trass);
   }
 
@@ -114,7 +146,6 @@ window['mm'] = this._map;
         .circle(e, this._stopRadius,
           {
             fill: true,
-            // radius: this._stopRadius,
             fillOpacity: 1
           }
         )

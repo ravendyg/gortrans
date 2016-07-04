@@ -13,6 +13,7 @@ class GortransApiService implements OnInit{
 	private _echoUrl: string;
 	private _listMarsh: string;
 	private _listTrasses: string;
+	private _listMarkers: string;
 
 	private _routes: routesType;
 
@@ -23,6 +24,7 @@ class GortransApiService implements OnInit{
 		this._echoUrl = 'http://excur.info:3006';
 		this._listMarsh = '?url=http://maps.nskgortrans.ru/listmarsh.php?r&r=true';
 		this._listTrasses = '?url=http://maps.nskgortrans.ru/trasses.php?r=';
+		this._listMarkers = '?url=http://maps.nskgortrans.ru/markers.php?r=';
 		this._lines = {};
 	}
 
@@ -75,9 +77,9 @@ class GortransApiService implements OnInit{
 
 	public getRouteLine (marsh: string, type: number, cb: any): void
 	{
-		if (this._lines[type + '-' + marsh])
+		if (this._lines[ (type + 1) + '-' + marsh])
 		{	// already fetched
-			cb(type + '-' + marsh, this._lines[type + '-' + marsh]);
+			cb( (type + 1) + '-' + marsh, this._lines[ (type + 1) + '-' + marsh]);
 		}
 		else
 		{
@@ -85,13 +87,67 @@ class GortransApiService implements OnInit{
 			.subscribe(
 				((trass: trassPoint []) =>
 				{
-					this._lines[type + '-' + marsh] = trass;
-					cb(type + '-' + marsh, trass);
+					this._lines[ (type + 1) + '-' + marsh] = trass;
+					cb( (type + 1) + '-' + marsh, trass);
 				}).bind(this),
 				err => console.log(err)
 			)
 			;
 		}
+	}
+
+	/** get buses coordinates
+	 *	@ids - merged type + '-' + marsh
+	**/
+	public getMarkers(ids: string [], cb: any): void
+	{
+		this._getMarkers(ids)
+			.subscribe(
+				cb,
+				console.log
+			);
+	}
+
+	/** get buses coordinates
+	 *	@ids - merged  (type + 1) + '-' + marsh
+	**/
+	private _getMarkers(ids: string []): Observable<busData []>
+	{
+		const query: string = ids.reduce(
+			(acc, cv) =>
+			{	const parts = cv.split('-');
+				return acc + parseInt(parts[0]) + '-' + parts[1] + '-W-' + parts[1] + '|';
+			},
+			''
+		);
+		return this._http
+			.get( this._echoUrl + this._listMarkers + query)
+			.map(
+				(resp: Response) =>
+				{
+					var parsedRes = <{markers: busDataResponse []}>resp.json();
+					return parsedRes.markers.map(
+						e => (
+						{
+							title: e.title,
+							idTypetr: e.id_typetr,
+							marsh: e.marsh,
+							graph: +e.graph,
+							direction: e.direction,
+							lat: +e.lat,
+							lng: +e.lng,
+							time_nav: Date.parse(e.time_nav),
+							azimuth: +e.azimuth,
+							rasp: e.rasp,
+							speed: +e.speed,
+							segmentOrder: e.segment_order,
+							ramp: e.ramp
+						})
+					);
+				}
+			)
+			.catch( this._handleHttpError )
+			;
 	}
 
 	// get list of routes from gortrans
