@@ -34,7 +34,7 @@
       <ion-item
         *ngFor="let bus of buses"
         [hidden]="hideBuses"
-        (click)="selectRoute(bus.marsh, 0)"
+        (click)="selectRoute(1, bus.marsh)"
       >
         {{bus.name}}
       </ion-item>
@@ -59,7 +59,7 @@
       <ion-item
         *ngFor="let smallBus of smallBuses"
         [hidden]="hideSmallBuses"
-        (click)="selectRoute(smallBus.marsh, 7)"
+        (click)="selectRoute(8, smallBus.marsh)"
       >
         {{smallBus.name}}
       </ion-item>
@@ -84,7 +84,7 @@
       <ion-item
         *ngFor="let trolley of trolleys"
         [hidden]="hideTrolleys"
-        (click)="selectRoute(trolley.marsh, 1)"
+        (click)="selectRoute(2, trolley.marsh)"
       >
         {{trolley.name}}
       </ion-item>
@@ -109,7 +109,7 @@
       <ion-item
         *ngFor="let tram of trams"
         [hidden]="hideTrams"
-        (click)="selectRoute(tram.marsh, 2)"
+        (click)="selectRoute(3, tram.marsh)"
       >
         {{tram.name}}
       </ion-item>

@@ -11,7 +11,7 @@ export class MapPage implements OnInit, AfterViewChecked
   private _map: iMap;
   private _trackMapSize: boolean;
   private _actualRouteLines: actualRoute;
-  private _buses: any [];
+  private _buses: {id: string, marker: any} [];
 
   // constants
   private _stopRadius: number;
@@ -123,14 +123,31 @@ window['mm'] = this._map;
   {
     if (this._actualRouteLines[id])
     {
+      // remove route stops from the map
       this._actualRouteLines[id].stops
         .forEach( e => this._map.removeLayer(e.marker) );
+      // remove route from the map
       this._map.removeLayer(this._actualRouteLines[id].route);
       // free color
       this._routeColors.push(this._actualRouteLines[id].color);
+      // from route memory
+      delete this._actualRouteLines[id];
       // remove icon
       this.busIcons = this.busIcons.filter( e => e.id !== id );
     }
+
+    // remove buses from the map
+    this._buses.forEach(
+      e =>
+      {
+        if (e.id === id) { this._map.removeLayer(e.marker); }
+      }
+    );
+    // remove buses from memory
+    this._buses = this._buses.filter( e => e.id !== id );
+
+    // remove from service
+    this._transportService.removeLine(id);
   }
 
   /**

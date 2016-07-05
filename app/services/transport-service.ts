@@ -40,7 +40,7 @@ class TransportService implements OnInit {
 	{
 	}
 
-  public selectRoute (marsh: string, type: number): void
+  public selectRoute (type: number, marsh: string): void
   {
     this._gortransService.getRouteLine(marsh, type, this._getRouteLinesCallback.bind(this) )
   }
@@ -83,6 +83,11 @@ class TransportService implements OnInit {
     return this._routeLinesOnMap;
   }
 
+  public removeLine (id: string): void
+  {
+    this._routeLinesOnMap = this._routeLinesOnMap.filter( e => e.id !== id );
+  }
+
   /**
    * @cb - subscribtion callback
    * @return - unsubscribe callback
@@ -123,7 +128,7 @@ class TransportService implements OnInit {
       ((buses: busData []) =>
       {
         // if (buses.length === 0) { return; }
-        // (type + 1) + '-' + marsh
+        // type + '-' + marsh
         const separatedBuses = buses.reduce(
           (pv, cv) =>
           {

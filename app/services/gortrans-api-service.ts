@@ -77,9 +77,9 @@ class GortransApiService implements OnInit{
 
 	public getRouteLine (marsh: string, type: number, cb: any): void
 	{
-		if (this._lines[ (type + 1) + '-' + marsh])
+		if (this._lines[ type + '-' + marsh])
 		{	// already fetched
-			cb( (type + 1) + '-' + marsh, this._lines[ (type + 1) + '-' + marsh]);
+			cb( type + '-' + marsh, this._lines[ type + '-' + marsh]);
 		}
 		else
 		{
@@ -87,8 +87,8 @@ class GortransApiService implements OnInit{
 			.subscribe(
 				((trass: trassPoint []) =>
 				{
-					this._lines[ (type + 1) + '-' + marsh] = trass;
-					cb( (type + 1) + '-' + marsh, trass);
+					this._lines[ type + '-' + marsh] = trass;
+					cb( type + '-' + marsh, trass);
 				}).bind(this),
 				err => console.log(err)
 			)
@@ -109,7 +109,7 @@ class GortransApiService implements OnInit{
 	}
 
 	/** get buses coordinates
-	 *	@ids - merged  (type + 1) + '-' + marsh
+	 *	@ids - merged  type + '-' + marsh
 	**/
 	private _getMarkers(ids: string []): Observable<busData []>
 	{
@@ -189,7 +189,7 @@ class GortransApiService implements OnInit{
 
 	private _getTrassUrl (type: number, marsh: string): string
 	{
-		return this._listTrasses + (type+1) + '-' + marsh + '-W';
+		return this._listTrasses + type + '-' + marsh + '-W';
 	}
 
 	private _handleHttpError (
