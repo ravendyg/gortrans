@@ -58,7 +58,8 @@ declare type actualRoute =
 		{
 			id: string,
 			marker: iCircle
-		} []
+		} [],
+		color: string
 	}
 };
 
@@ -94,4 +95,12 @@ declare type busDataResponse =
 	speed: string,
 	segment_order: string,
 	ramp: string
+};
+
+declare type busIcon =
+{
+	id: string,
+	img: string,
+	color: string,
+	name: string
 };

@@ -11,12 +11,13 @@ export class MapPage implements OnInit, AfterViewChecked
   private _map: iMap;
   private _trackMapSize: boolean;
   private _actualRouteLines: actualRoute;
-
   private _buses: any [];
 
   // constants
   private _stopRadius: number;
-  // private _routeColors: string [];
+  private _routeColors: string [];
+
+  public busIcons: busIcon [];
 
   constructor(private _transportService: TransportService)
   {
@@ -27,7 +28,9 @@ export class MapPage implements OnInit, AfterViewChecked
 
     this._buses = [];
 
-    // this._routeColors = ['blue', 'green', 'red'];
+    this.busIcons = [];
+
+    this._routeColors = ['blue', 'green', 'red'];
   }
 
   public ngOnInit (): void
@@ -71,10 +74,13 @@ window['mm'] = this._map;
     }
   }
 
+  public removeRoute (id: string)
+  {
+    this._removeRouteOnMap(id);
+  }
+
   private _processBusMarkers ( markers: {[id: string]: busData []} )
   {
-    console.log(markers);
-
     this._buses.map(
       ( e => this._map.removeLayer(e.marker) ).bind(this)
     );
@@ -120,6 +126,10 @@ window['mm'] = this._map;
       this._actualRouteLines[id].stops
         .forEach( e => this._map.removeLayer(e.marker) );
       this._map.removeLayer(this._actualRouteLines[id].route);
+      // free color
+      this._routeColors.push(this._actualRouteLines[id].color);
+      // remove icon
+      this.busIcons = this.busIcons.filter( e => e.id !== id );
     }
   }
 
@@ -128,16 +138,47 @@ window['mm'] = this._map;
    */
   private _addRouteOnMap (id: string, trass: trassPoint []): void
   {
+    const color = this._routeColors.pop();
+
     const stops = trass
       .filter( e => !!e.id )
       .map( e => _createStopMarker.bind(this)(e) )
       ;
     this._actualRouteLines[id] =
     {
-      route: this._L.polyline(trass, {color: 'blue'}).addTo(this._map),
-      stops
+      route: this._L.polyline(
+                trass,
+                {
+                  color,
+                  className: 'route-line'
+                }
+              ).addTo(this._map),
+      stops,
+      color
     };
     this._map.fitBounds(this._actualRouteLines[id].route.getBounds());
+
+    var img;
+    var [type, name] = id.split('-');
+    name = name.replace(/^0*/, '');
+    switch (type)
+    {
+      case '1':
+        img = 'build/img/bus.png';
+      break;
+      case '2':
+        img = 'build/img/trolley.png';
+      break;
+      case '3':
+        img = 'build/img/tram.png';
+      break;
+      case '8':
+        img = 'build/img/minibus.png';
+      break;
+    }
+    this.busIcons.push({
+      id, color, img, name
+    });
 
     // not pure !!!
     function _createStopMarker (e)
@@ -146,7 +187,9 @@ window['mm'] = this._map;
         .circle(e, this._stopRadius,
           {
             fill: true,
-            fillOpacity: 1
+            fillOpacity: 1,
+            className: 'bus-stop',
+            color
           }
         )
         .bindPopup(e.n)

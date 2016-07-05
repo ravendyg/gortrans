@@ -24,7 +24,7 @@ class TransportService implements OnInit {
 
 	constructor(private _gortransService: GortransApiService)
 	{
-    this._linesLimit = 1;
+    this._linesLimit = 3;
 		this._routeLinesOnMap = [];
 
     this._addLineOnMapSubId = 1;

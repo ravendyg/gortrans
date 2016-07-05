@@ -60,3 +60,52 @@ $colors: (
   height: 100%;
   width: 100%;
 }
+
+.bus-stop
+{
+  z-index: 100;
+}
+.route-line
+{
+  z-index: 10;
+}
+
+#bus-icons-list
+{
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+  .route-icon
+  {
+    .red
+    {
+      color: red;
+    }
+    .blue
+    {
+      color: blue;
+    }
+    .green
+    {
+      color: green;
+    }
+    .icon-name
+    {
+      font-size: 24px;
+      font-weight: 800;
+      position: relative;
+      display: inline-block;
+      bottom: 14px;
+      right: 5px;
+      width: 34px;
+      white-space: nowrap;
+      text-align: right;
+    }
+    img
+    {
+      max-height: 44px;
+      max-width: 44px;
+    }
+  }
+}
