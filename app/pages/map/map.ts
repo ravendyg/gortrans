@@ -1,5 +1,5 @@
 import {Component, OnInit, AfterViewChecked} from '@angular/core';
-
+import { Observable } from 'rxjs/Observable';
 import {TransportService} from '../../services/transport-service';
 
 @Component({
@@ -12,6 +12,7 @@ export class MapPage implements OnInit, AfterViewChecked
   private _trackMapSize: boolean;
   private _actualRouteLines: actualRoute;
   private _buses: {id: string, marker: any} [];
+  private _swipeouts: any [];
 
   // constants
   private _stopRadius: number;
@@ -31,6 +32,8 @@ export class MapPage implements OnInit, AfterViewChecked
     this.busIcons = [];
 
     this._routeColors = ['blue', 'green', 'red'];
+
+    this._swipeouts = [];
   }
 
   public ngOnInit (): void
@@ -61,6 +64,8 @@ window['mm'] = this._map;
     this._transportService.subscribeForMarkers(
       this._processBusMarkers.bind(this)
     );
+
+    document.addEventListener('touchstart', this._initSwipeout.bind(this));
   }
 
   public ngAfterViewChecked (): void
@@ -74,9 +79,146 @@ window['mm'] = this._map;
     }
   }
 
-  public removeRoute (id: string)
+  public zoomToRoute (id: string)
+  {
+    this._map.fitBounds(
+      this._actualRouteLines[id].route.getBounds()
+    );
+  }
+
+  private _initSwipeout(e: TouchEvent): void
+  {
+    var iconDiv = this._findDivParent(<HTMLElement>e.target);
+    if (iconDiv && iconDiv.dataset['type'] === 'icon-div')
+    {
+      this._setSwipeout(e.touches[0], iconDiv);
+    }
+  }
+
+  private _findDivParent (el: HTMLElement): HTMLDivElement
+  {
+    while (   el.tagName.toLowerCase() !== 'div'
+           && el.tagName.toLowerCase() !== 'body')
+    {
+      el = el.parentElement;
+    }
+    if (el.tagName.toLowerCase() === 'body') { return null; }
+    return <HTMLDivElement>el;
+  }
+
+  private _removeRoute (id: string)
   {
     this._removeRouteOnMap(id);
+  }
+
+  private _setSwipeout (e: Touch, target: HTMLDivElement)
+  {
+    const id = target.dataset['id']
+    const start = Date.now();
+
+    const startClick =
+    {
+      x: e.clientX,
+      y: e.clientY
+    };
+
+    const startPosition = {
+      x: target.offsetLeft,
+      y: target.offsetTop
+    };
+
+    const move =
+      Observable
+        .fromEvent(document, 'touchmove')
+        .debounceTime(16)
+        .map( (e: TouchEvent) => e.touches[0] )
+        .map(
+          (e: Touch) =>
+          {
+            return {
+              x: e.clientX - startClick.x,
+              y: e.clientY - startClick.y
+            }
+          }
+        )
+        .takeUntil( Observable.fromEvent(document,'touchend') )
+        ;
+
+    const sub = move.subscribe(
+      vl =>
+      {
+        console.log(vl);
+        target.style.transform = `translate(${vl.x}px)`;
+      },
+      er => {},
+      () =>
+      {
+        if (Date.now() - start < 200)
+        {
+          console.log('stop');
+        }
+      }
+    );
+
+
+
+    // const touch: Observable<any> =
+    //   Observable
+    //     .create(
+    //       observer =>
+    //       {
+    //         const interId = setInterval(
+    //           () => {observer.next()}, 50
+    //         )
+    //         return () => {
+    //           clearInterval(interId);
+    //           console.log('touch up');
+    //         }
+    //       }
+    //     )
+    //     .takeUntil( Observable.fromEvent(document,'touchend') )
+    //     ;
+    // touch.subscribe();
+
+    // const mouseMoves =
+    //   Observable
+    //   .fromEvent(target, 'mousedown')
+    //   .map( (e: Event) => { this._trackSwipeoutPosition(e, target); } )
+    //   ;
+
+    // var sub =
+    //   this._trackSwipeoutPosition.subscribe(
+    //     e =>
+    //     {
+    //       console.log(e)
+    //     }
+    //   );
+
+    // this._swipeouts.push( { id, sub } );
+  }
+
+  private _trackSwipeoutPosition (md: Event, target: HTMLElement): Observable<any>
+  {
+    const startPosition =
+    {
+      x: target.offsetLeft,
+      y: target.offsetTop
+    };
+
+    return Observable
+      .fromEvent(document, 'mousemove')
+      .bufferTime(100)
+      // .map( e => console.log )
+      // .takeUntil( Observable.fromEvent(document,'mouseup') )
+      // .map(
+      //   e => {
+      //     return {
+      //       x: `${startPosition.x - (start.x - e.clientX)}px`,
+      //       y: `${startPosition.y - (start.y - e.clientY)}px`
+      //     };
+      //   }
+      // )
+      ;
   }
 
   private _processBusMarkers ( markers: {[id: string]: busData []} )
