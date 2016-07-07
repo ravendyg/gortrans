@@ -17,6 +17,7 @@ export class MapPage implements OnInit, AfterViewChecked
   // constants
   private _stopRadius: number;
   private _routeColors: string [];
+  private _typeToNames: {[id: string]: string};
 
   public busIcons: busIcon [];
 
@@ -34,6 +35,14 @@ export class MapPage implements OnInit, AfterViewChecked
     this._routeColors = ['blue', 'green', 'red'];
 
     this._swipeouts = [];
+
+    this._typeToNames =
+    {
+      '1': 'bus',
+      '2': 'trolley',
+      '3': 'tram',
+      '8': 'minibus'
+    };
   }
 
   public ngOnInit (): void
@@ -153,8 +162,13 @@ window['mm'] = this._map;
         markers[key].map(
           (e =>
           {
+            var azimuth = Math.floor( (Math.abs(e.azimuth-22.5)) / 45 )*45;
+            const icon = this._L.icon({
+              iconUrl: `build/img/transport/${this._typeToNames[key.split('-')[0]]}-${azimuth}.png`,
+              iconSize: [46, 42]
+            });
             const marker = this._L
-              .marker({lat: e.lat, lng: e.lng})
+              .marker({lat: e.lat, lng: e.lng}, {icon})
               .bindPopup(e.title)
               .addTo(this._map)
               ;
@@ -236,24 +250,11 @@ window['mm'] = this._map;
     };
     this._map.fitBounds(this._actualRouteLines[id].route.getBounds());
 
-    var img;
     var [type, name] = id.split('-');
     name = name.replace(/^0*/, '');
-    switch (type)
-    {
-      case '1':
-        img = 'build/img/bus.png';
-      break;
-      case '2':
-        img = 'build/img/trolley.png';
-      break;
-      case '3':
-        img = 'build/img/tram.png';
-      break;
-      case '8':
-        img = 'build/img/minibus.png';
-      break;
-    }
+
+    const img = `build/img/${this._typeToNames[type]}.png`;
+
     this.busIcons.push({
       id, color, img, name
     });

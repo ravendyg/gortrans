@@ -9,6 +9,7 @@ interface iL
 	map: (id: string, options?: mapOptions) => iMap;
 	tileLayer: any;
 	marker: (LatLng: latLng, options?: markerOptions) => iMarker;
+	icon: (options: iconOptions) => iIcon;
 }
 
 interface iMap
@@ -78,6 +79,20 @@ interface iIcon
 
 }
 
+declare type iconOptions =
+{
+	iconUrl?: string,
+	iconRetinaUrl?: string,
+	iconSize?: Point,
+	iconAnchor?: Point,
+	shadowUrl?: string,
+	shadowRetinaUrl?: string,
+	shadowSize?: Point,
+	shadowAnchor?: Point,
+	popupAnchor?: Point,
+	className?: string
+};
+
 interface polylineOptions extends pathOptions
 {
 	smoothFactor?: number,
@@ -118,12 +133,12 @@ declare type fitBoundsOptions =
 	maxZoom: number
 };
 
-declare type Point =
-{
-	x: number,
-	y: number,
-	round?: boolean
-};
+declare type Point = number [];
+// {
+// 	x: number,
+// 	y: number,
+// 	round?: boolean
+// };
 
 interface mapOptions extends mapStateOptions, interactionOptions, keyboardNavigationOptions
 {

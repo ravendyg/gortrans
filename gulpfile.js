@@ -75,7 +75,7 @@ gulp.task(
     .pipe( gulp.dest('www/build/leaflet') )
 );
 gulp.task('image', function () {
-  gulp.src('./app/img/*.*')
+  gulp.src('./app/img/**/*.*')
     .pipe(image())
     .pipe(gulp.dest('www/build/img'));
 });
