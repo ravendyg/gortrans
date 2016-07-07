@@ -19,6 +19,9 @@ interface iMap
 	invalidateSize: () => this;
 	removeLayer: (layer: iLayer) => this;
 	fitBounds: (bounds: LatLngBounds, options?: fitBoundsOptions) => this;
+	on: (event: string, cb: (event?: Event) => void) => this;
+	off: (event: string, cb: (event?: Event) => void) => this;
+	getZoom: () => number;
 }
 
 interface iLayer
@@ -134,11 +137,6 @@ declare type fitBoundsOptions =
 };
 
 declare type Point = number [];
-// {
-// 	x: number,
-// 	y: number,
-// 	round?: boolean
-// };
 
 interface mapOptions extends mapStateOptions, interactionOptions, keyboardNavigationOptions
 {

@@ -13,6 +13,7 @@ export class MapPage implements OnInit, AfterViewChecked
   private _actualRouteLines: actualRoute;
   private _buses: {id: string, marker: any} [];
   private _swipeouts: any [];
+  private _stopsHidden: boolean;
 
   // constants
   private _stopRadius: number;
@@ -57,6 +58,7 @@ export class MapPage implements OnInit, AfterViewChecked
           bounds = this._L.latLngBounds(southWest, northEast);
     const startCoords = {lat: 54.908593335436926, lng: 83.0291748046875};
     const startZoom = 11;
+    this._stopsHidden = true;
 
     this._map = this._L.map('map', {
         minZoom: 4,
@@ -67,6 +69,32 @@ window['mm'] = this._map;
 
     document.querySelector('.leaflet-control-zoom').remove();
     document.querySelector('.leaflet-control-attribution').remove();
+
+    // track zoom change and hide stops on big scale
+    this._map.on(
+      'zoomend',
+      ((e: Event) =>
+      {
+        var i: number;
+console.log(this._map.getZoom());
+        if (this._map.getZoom() >= 13)
+        { // show
+          if (this._stopsHidden)
+          {
+            this._changeCSSRule('.bus-stop-marker', " {}");
+            this._stopsHidden = false;
+          }
+        }
+        else
+        { // hide
+          if (!this._stopsHidden)
+          {
+            this._changeCSSRule('.bus-stop-marker', " { display: none !important; }");
+            this._stopsHidden = true;
+          }
+        }
+      }).bind(this)
+    );
 
     // subscribe to searched routes updates
     this._transportService.subscribeForAddLineOnMap(
@@ -80,7 +108,8 @@ window['mm'] = this._map;
     // prepare icons
     this._icons['stop'] =  this._L.icon({
       iconUrl: `build/img/bus-stop.png`,
-      iconSize: [46, 42]
+      iconSize: [46, 42],
+      className: 'bus-stop-marker'
     });
 
     for (var keyType in this._typeToNames)
@@ -90,7 +119,7 @@ window['mm'] = this._map;
         this._icons[`${keyType}-${angle}`] =
           this._L.icon({
             iconUrl: `build/img/transport/${this._typeToNames[keyType]}-${angle}.png`,
-            iconSize: [46, 42]
+            iconSize: [46, 42],
           });
       }
     }
@@ -115,6 +144,29 @@ window['mm'] = this._map;
     this._map.fitBounds(
       this._actualRouteLines[id].route.getBounds()
     );
+  }
+
+  private _changeCSSRule (selector: string, newRule: string): void
+  {
+    const cssFiles = document.styleSheets;
+    var keyCss, countCss;
+    for (keyCss = 0; keyCss < cssFiles.length; keyCss++)
+    {
+      if (cssFiles[keyCss].href.match('app.md.css'))
+      {
+        const rules = (<CSSStyleSheet>cssFiles[keyCss]).cssRules
+        for (countCss = 0; countCss < rules.length; countCss++)
+        {
+          if ((<CSSStyleRule>rules[countCss]).selectorText === selector)
+          {
+            (<CSSStyleSheet>cssFiles[keyCss]).deleteRule(countCss);
+            (<CSSStyleSheet>cssFiles[keyCss]).insertRule(selector + newRule, 0);
+            break;
+          }
+        }
+        break;
+      }
+    }
   }
 
   private _initSwipeout(e: TouchEvent): void
