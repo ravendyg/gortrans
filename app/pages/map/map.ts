@@ -18,6 +18,7 @@ export class MapPage implements OnInit, AfterViewChecked
   private _stopRadius: number;
   private _routeColors: string [];
   private _typeToNames: {[id: string]: string};
+  private _icons: {[id: string]: iIcon};
 
   public busIcons: busIcon [];
 
@@ -43,6 +44,8 @@ export class MapPage implements OnInit, AfterViewChecked
       '3': 'tram',
       '8': 'minibus'
     };
+
+    this._icons = {};
   }
 
   public ngOnInit (): void
@@ -74,6 +77,25 @@ window['mm'] = this._map;
       this._processBusMarkers.bind(this)
     );
 
+    // prepare icons
+    this._icons['stop'] =  this._L.icon({
+      iconUrl: `build/img/bus-stop.png`,
+      iconSize: [46, 42]
+    });
+
+    for (var keyType in this._typeToNames)
+    {
+      for (var angle = 0; angle < 360; angle += 45)
+      {
+        this._icons[`${keyType}-${angle}`] =
+          this._L.icon({
+            iconUrl: `build/img/transport/${this._typeToNames[keyType]}-${angle}.png`,
+            iconSize: [46, 42]
+          });
+      }
+    }
+
+    // icon menu manipulation
     document.addEventListener('touchstart', this._initSwipeout.bind(this));
   }
 
@@ -163,19 +185,20 @@ window['mm'] = this._map;
           (e =>
           {
             var azimuth = Math.floor( (Math.abs(e.azimuth-22.5)) / 45 )*45;
-            const icon = this._L.icon({
-              iconUrl: `build/img/transport/${this._typeToNames[key.split('-')[0]]}-${azimuth}.png`,
-              iconSize: [46, 42]
-            });
+            const icon =
+              this._icons[`${key.split('-')[0]}-${azimuth}`]
+
             const marker = this._L
               .marker({lat: e.lat, lng: e.lng}, {icon})
               .bindPopup(e.title)
               .addTo(this._map)
               ;
+
             this._buses.push({
               id: key,
               marker
             });
+
           }).bind(this)
         );
       }
@@ -263,14 +286,7 @@ window['mm'] = this._map;
     function _createStopMarker (e)
     {
       const marker = this._L
-        .circle(e, this._stopRadius,
-          {
-            fill: true,
-            fillOpacity: 1,
-            className: 'bus-stop',
-            color
-          }
-        )
+        .marker({lat: e.lat, lng: e.lng}, {icon: this._icons['stop']})
         .bindPopup(e.n)
         .addTo(this._map)
         ;
