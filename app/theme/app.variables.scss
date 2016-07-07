@@ -78,6 +78,7 @@ $colors: (
   z-index: 100;
   .route-icon
   {
+    transition: transform 0.025 linear;
     .red
     {
       color: red;

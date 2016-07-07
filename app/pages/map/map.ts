@@ -116,109 +116,28 @@ window['mm'] = this._map;
     const id = target.dataset['id']
     const start = Date.now();
 
-    const startClick =
-    {
-      x: e.clientX,
-      y: e.clientY
-    };
-
-    const startPosition = {
-      x: target.offsetLeft,
-      y: target.offsetTop
-    };
-
     const move =
       Observable
-        .fromEvent(document, 'touchmove')
-        .debounceTime(16)
-        .map( (e: TouchEvent) => e.touches[0] )
-        .map(
-          (e: Touch) =>
-          {
-            return {
-              x: e.clientX - startClick.x,
-              y: e.clientY - startClick.y
-            }
-          }
-        )
+        .interval(50)
         .takeUntil( Observable.fromEvent(document,'touchend') )
         ;
 
     const sub = move.subscribe(
       vl =>
       {
-        console.log(vl);
-        target.style.transform = `translate(${vl.x}px)`;
+        target.style.transform =
+          vl % 2 === 0 ? `rotate(10deg)` : `rotate(-10deg)`;
       },
       er => {},
-      () =>
+      (() =>
       {
-        if (Date.now() - start < 200)
-        {
-          console.log('stop');
-        }
-      }
+        target.style.transform = `rotate(0deg)`;
+        Date.now() - start < 1000
+          ? this.zoomToRoute(id)
+          : this._removeRoute(id)
+          ;
+      }).bind(this)
     );
-
-
-
-    // const touch: Observable<any> =
-    //   Observable
-    //     .create(
-    //       observer =>
-    //       {
-    //         const interId = setInterval(
-    //           () => {observer.next()}, 50
-    //         )
-    //         return () => {
-    //           clearInterval(interId);
-    //           console.log('touch up');
-    //         }
-    //       }
-    //     )
-    //     .takeUntil( Observable.fromEvent(document,'touchend') )
-    //     ;
-    // touch.subscribe();
-
-    // const mouseMoves =
-    //   Observable
-    //   .fromEvent(target, 'mousedown')
-    //   .map( (e: Event) => { this._trackSwipeoutPosition(e, target); } )
-    //   ;
-
-    // var sub =
-    //   this._trackSwipeoutPosition.subscribe(
-    //     e =>
-    //     {
-    //       console.log(e)
-    //     }
-    //   );
-
-    // this._swipeouts.push( { id, sub } );
-  }
-
-  private _trackSwipeoutPosition (md: Event, target: HTMLElement): Observable<any>
-  {
-    const startPosition =
-    {
-      x: target.offsetLeft,
-      y: target.offsetTop
-    };
-
-    return Observable
-      .fromEvent(document, 'mousemove')
-      .bufferTime(100)
-      // .map( e => console.log )
-      // .takeUntil( Observable.fromEvent(document,'mouseup') )
-      // .map(
-      //   e => {
-      //     return {
-      //       x: `${startPosition.x - (start.x - e.clientX)}px`,
-      //       y: `${startPosition.y - (start.y - e.clientY)}px`
-      //     };
-      //   }
-      // )
-      ;
   }
 
   private _processBusMarkers ( markers: {[id: string]: busData []} )
