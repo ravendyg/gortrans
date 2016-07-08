@@ -214,11 +214,16 @@ console.log(this._map.getZoom());
       er => {},
       (() =>
       {
-        target.style.transform = `rotate(0deg)`;
-        Date.now() - start < 1000
-          ? this.zoomToRoute(id)
-          : this._removeRoute(id)
-          ;
+        if (Date.now() - start < 1000)
+        {
+          target.style.transform = `rotate(0deg)`;
+          this.zoomToRoute(id);
+        }
+        if (Date.now() - start >= 1000)
+        {
+          target.remove();
+          this._removeRoute(id)
+        }
       }).bind(this)
     );
   }
