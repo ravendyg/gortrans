@@ -14,12 +14,12 @@ var _routes: routesListResponse [] = [];
 
 
 /** indexedDb */
-var DB = null;
+var DB: IDBDatabase = null;
 const dbName = "gortrans";
 const routesStoreName = "routes";
 const routePointsStoreName = "routePoints";
 
-var request = indexedDB.open(dbName, 4);
+var request = indexedDB.open(dbName, 5);
 
 
 request.addEventListener(
@@ -31,8 +31,8 @@ request.addEventListener(
 		DB.deleteObjectStore(routesStoreName);
 		DB.deleteObjectStore(routePointsStoreName);
 
-		DB.createObjectStore(routesStoreName, 			{ keyPath: "key" });
-		DB.createObjectStore(routePointsStoreName, 	{ keyPath: "routeId" });
+		DB.createObjectStore(routesStoreName);
+		DB.createObjectStore(routePointsStoreName);
 	}
 );
 
@@ -66,9 +66,14 @@ class IndexedDbService {
 			_sync.
 			then(
 				() =>
-				{	// ************* PLUG
-					// here need first read from db and then resolve
-					resolve(_routes);
+				{
+					const transaction = DB.transaction([routesStoreName], "readwrite");
+					const store = transaction.objectStore(routesStoreName);
+					const request = store.get('all');
+					request.addEventListener(
+						'success',
+						() => resolve( request.result )
+					);
 				}
 			)
 			.catch( err => reject(err) )
@@ -119,10 +124,14 @@ function _updateRoutes (flag, routes): Observable<void>
 				observer.next(true);
 			}
 			else
-			{	//**********PLUG
-				// here need to store it into db and then resolve
-				_routes = routes;
-				observer.next(true);
+			{
+				const transaction = DB.transaction([routesStoreName], "readwrite");
+				const store = transaction.objectStore(routesStoreName);
+				const request = store.put(routes, 'all');
+				request.addEventListener(
+					'success',
+					() => observer.next(true)
+				);
 			}
 		}
 	);
