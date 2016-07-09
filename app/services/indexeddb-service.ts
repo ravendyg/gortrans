@@ -6,12 +6,43 @@ import { Observable } from 'rxjs/Observable';
 import {GortransInfoApiService} from './gortrans-info-api-service';
 
 
-
 var _syncTimestamp: number;
 var GortransInfo: GortransInfoApiService;
 var _sync: Promise<any>;
 
 var _routes: routesListResponse [] = [];
+
+
+/** indexedDb */
+var DB = null;
+const dbName = "gortrans";
+const routesStoreName = "routes";
+const routePointsStoreName = "routePoints";
+
+var request = indexedDB.open(dbName, 4);
+
+
+request.addEventListener(
+	'upgradeneeded',
+	ev =>
+	{
+		DB = (<IDBOpenDBRequest>ev.target).result;
+
+		DB.deleteObjectStore(routesStoreName);
+		DB.deleteObjectStore(routePointsStoreName);
+
+		DB.createObjectStore(routesStoreName, 			{ keyPath: "key" });
+		DB.createObjectStore(routePointsStoreName, 	{ keyPath: "routeId" });
+	}
+);
+
+request.addEventListener(
+	'success',
+	ev =>
+	{
+		DB = (<IDBOpenDBRequest>ev.target).result;
+	}
+);
 
 @Injectable()
 export /**
@@ -54,36 +85,26 @@ class IndexedDbService {
  */
 function _syncronize (): Promise<any>
 {
-	const verificationRequest:Observable<upToDateVerification> =
-		GortransInfo
-			.synchronize(_syncTimestamp)
-			.map(
-				(e: routesListResponse []) =>
-				{
-					return {
-						timestamp: getTimestamp(),
-						routesFlag: false,
-						routes: e,
-						trassFlag: true
-					};
-				}
-			);
-
 	function main (resolve, reject)
 	{
-		verificationRequest.subscribe(
-			dat =>
-			{
-				const call1 = _updateRoutes(dat.routesFlag, dat.routes);
-				const call2 = _updateRouteLines(dat.trassFlag, dat.trasses);
-				Observable.zip(call1, call2)
-					.subscribe(
-						res => resolve(),
-						err => reject(err)
-					);
-			},
-			err => reject(err)
-		);
+		GortransInfo.synchronize(_syncTimestamp)
+			.subscribe(
+				dat =>
+				{
+					const call1 = _updateRoutes(dat.routesFlag, dat.routes);
+					const call2 = _updateRouteLines(dat.trassFlag, dat.trasses);
+					Observable.zip(call1, call2)
+						.subscribe(
+							res =>
+							{
+								localStorage.setItem('routesTimestamp', ''+getTimestamp());
+								resolve();
+							},
+							err => reject(err)
+						);
+				},
+				err => reject(err)
+			);
 	}
 	return new Promise( main );
 }

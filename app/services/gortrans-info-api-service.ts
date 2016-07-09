@@ -31,11 +31,21 @@ class GortransInfoApiService implements OnInit {
 	}
 
 		// get list of routes from gortrans
-	public synchronize (timestamp: number): Observable<routesListResponse []>
+	public synchronize (timestamp: number): Observable<upToDateVerification>
 	{
 		return this._http
 			.get( this._echoUrl + this._listRoutes + '&timestamp=' + timestamp)
-			.map( (resp: Response) => <routesListResponse []>resp.json() )
+			.map(
+				(resp: Response) =>
+				{
+					return {
+						routesFalg: false,
+						routes: <routesListResponse []>resp.json(),
+						trassFlag: true,
+						trasses: []
+					};
+				}
+			)
 			.catch( this._handleHttpError )
 			;
 	}

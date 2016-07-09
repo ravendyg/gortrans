@@ -108,7 +108,6 @@ declare type busIcon =
 
 declare type upToDateVerification =
 {
-	timestamp: number,
 	routesFlag: boolean,
 	trassFlag: boolean,
 	routes?: routesListResponse [],
