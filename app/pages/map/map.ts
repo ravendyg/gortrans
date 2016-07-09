@@ -76,7 +76,6 @@ window['mm'] = this._map;
       ((e: Event) =>
       {
         var i: number;
-console.log(this._map.getZoom());
         if (this._map.getZoom() >= 13)
         { // show
           if (this._stopsHidden)

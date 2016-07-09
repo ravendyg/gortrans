@@ -5,6 +5,8 @@ import {ionicBootstrap, Platform, MenuController, Nav} from 'ionic-angular';
 import {StatusBar} from 'ionic-native';
 import {MapPage} from './pages/map/map';
 
+import {IndexedDbService} from './services/indexeddb-service';
+import {GortransInfoApiService} from './services/gortrans-info-api-service';
 import {GortransApiService} from './services/gortrans-api-service';
 import {TransportService} from './services/transport-service';
 
@@ -67,7 +69,7 @@ class MyApp implements OnInit {
       },
       100
     );
-    // get list of marsh
+    // get list of route
     this._gortransService.getRoutes(
       routes =>
       {
@@ -91,9 +93,9 @@ class MyApp implements OnInit {
     }
   }
 
-  public selectRoute (type: number, marsh: string): void
+  public selectRoute (type: number, route: string): void
   {
-    this._transportService.selectRoute(type, marsh);
+    this._transportService.selectRoute(type, route);
     this.menu.getMenus()[0].close();
   }
 
@@ -143,4 +145,13 @@ class MyApp implements OnInit {
   }
 }
 
-ionicBootstrap(MyApp, [HTTP_PROVIDERS, GortransApiService, TransportService]);
+ionicBootstrap(
+  MyApp,
+  [
+    HTTP_PROVIDERS,
+    GortransInfoApiService,
+    GortransApiService,
+    IndexedDbService,
+    TransportService
+  ]
+);

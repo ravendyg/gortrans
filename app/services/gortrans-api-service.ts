@@ -4,6 +4,8 @@ import { Injectable, OnInit } from '@angular/core';
 import { Http, Response } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 
+import {IndexedDbService} from './indexeddb-service';
+
 @Injectable()
 export /**
  * GortransApiService
@@ -11,7 +13,7 @@ export /**
 class GortransApiService implements OnInit{
 
 	private _echoUrl: string;
-	private _listMarsh: string;
+	private _listRoutes: string;
 	private _listTrasses: string;
 	private _listMarkers: string;
 
@@ -19,10 +21,10 @@ class GortransApiService implements OnInit{
 
 	private _lines: { [id: string]: trassPoint [] };
 
-	constructor(private _http: Http)
+	constructor(private _http: Http, private _indexedDbService: IndexedDbService)
 	{
 		this._echoUrl = 'http://excur.info:3006';
-		this._listMarsh = '?url=http://maps.nskgortrans.ru/listmarsh.php?r&r=true';
+		this._listRoutes = '?url=http://maps.nskgortrans.ru/listmarsh.php?r&r=true';
 		this._listTrasses = '?url=http://maps.nskgortrans.ru/trasses.php?r=';
 		this._listMarkers = '?url=http://maps.nskgortrans.ru/markers.php?r=';
 		this._lines = {};
@@ -40,9 +42,11 @@ class GortransApiService implements OnInit{
 		}
 		else
 		{
-			this._getRoutes()
-			.subscribe(
-        (marshs: marshListResponse [] ) =>
+			// this._getRoutes()
+			this._indexedDbService.getRoutes()
+			// .subscribe(
+			.then(
+        (routes: routesListResponse [] ) =>
 				{
 					this._routes = {
 						buses: [],
@@ -50,45 +54,51 @@ class GortransApiService implements OnInit{
 						trams: [],
 						trolleys: []
 					};
-					for (var i = 0; i < marshs.length; i++)
+					for (var i = 0; i < routes.length; i++)
 					{
-						switch (marshs[i].type) {
+						switch (routes[i].type) {
 							case 0:
-								this._routes.buses = marshs[i].ways;
+								this._routes.buses = routes[i].ways;
 							break;
 							case 1:
-								this._routes.trolleys = marshs[i].ways;
+								this._routes.trolleys = routes[i].ways;
 							break;
 							case 2:
-								this._routes.trams = marshs[i].ways;
+								this._routes.trams = routes[i].ways;
 							break;
 							case 7:
-								this._routes.smallBuses = marshs[i].ways;
+								this._routes.smallBuses = routes[i].ways;
 							break;
 						}
 					}
 					cb(this._routes);
-				},
-        err => console.log(err)
+				}
       )
+			.catch(
+				err => console.log(err)
+			)
       ;
 		}
 	}
 
-	public getRouteLine (marsh: string, type: number, cb: any): void
+	public getRouteLine (
+		route: string,
+		type: number,
+		cb: (id: string, route: trassPoint []) => any
+	): void
 	{
-		if (this._lines[ type + '-' + marsh])
+		if (this._lines[ type + '-' + route])
 		{	// already fetched
-			cb( type + '-' + marsh, this._lines[ type + '-' + marsh]);
+			cb( type + '-' + route, this._lines[ type + '-' + route]);
 		}
 		else
 		{
-			this._getRouteLine(type, marsh)
+			this._getRouteLine(type, route)
 			.subscribe(
 				((trass: trassPoint []) =>
 				{
-					this._lines[ type + '-' + marsh] = trass;
-					cb( type + '-' + marsh, trass);
+					this._lines[ type + '-' + route] = trass;
+					cb( type + '-' + route, trass);
 				}).bind(this),
 				err => console.log(err)
 			)
@@ -97,7 +107,7 @@ class GortransApiService implements OnInit{
 	}
 
 	/** get buses coordinates
-	 *	@ids - merged type + '-' + marsh
+	 *	@ids - merged type + '-' + route
 	**/
 	public getMarkers(ids: string [], cb: any): void
 	{
@@ -109,7 +119,7 @@ class GortransApiService implements OnInit{
 	}
 
 	/** get buses coordinates
-	 *	@ids - merged  type + '-' + marsh
+	 *	@ids - merged  type + '-' + route
 	**/
 	private _getMarkers(ids: string []): Observable<busData []>
 	{
@@ -131,7 +141,7 @@ class GortransApiService implements OnInit{
 						{
 							title: e.title,
 							idTypetr: e.id_typetr,
-							marsh: e.marsh,
+							route: e.marsh,
 							graph: +e.graph,
 							direction: e.direction,
 							lat: +e.lat,
@@ -150,24 +160,24 @@ class GortransApiService implements OnInit{
 			;
 	}
 
-	// get list of routes from gortrans
-	private _getRoutes (): Observable<marshListResponse []>
-	{
-		return this._http
-			.get( this._echoUrl + this._listMarsh )
-			.map( (resp: Response) => <marshListResponse []>resp.json() )
-			.catch( this._handleHttpError )
-			;
-	}
+	// // get list of routes from gortrans
+	// private _getRoutes (): Observable<routesListResponse []>
+	// {
+	// 	return this._http
+	// 		.get( this._echoUrl + this._listRoutes )
+	// 		.map( (resp: Response) => <routesListResponse []>resp.json() )
+	// 		.catch( this._handleHttpError )
+	// 		;
+	// }
 
 	/** get list of point for specified route
 	 * @type
-	 * @marsh - route
+	 * @route
 	 **/
-	private _getRouteLine (type: number, marsh: string): Observable<trassPoint []>
+	private _getRouteLine (type: number, route: string): Observable<trassPoint []>
 	{
 		return this._http
-			.get( this._echoUrl + this._getTrassUrl(type, marsh) )
+			.get( this._echoUrl + this._getTrassUrl(type, route) )
 			.map(
 				(resp: Response) =>
 				{
@@ -187,9 +197,9 @@ class GortransApiService implements OnInit{
 			;
 	}
 
-	private _getTrassUrl (type: number, marsh: string): string
+	private _getTrassUrl (type: number, route: string): string
 	{
-		return this._listTrasses + type + '-' + marsh + '-W';
+		return this._listTrasses + type + '-' + route + '-W';
 	}
 
 	private _handleHttpError (

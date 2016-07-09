@@ -40,9 +40,9 @@ class TransportService implements OnInit {
 	{
 	}
 
-  public selectRoute (type: number, marsh: string): void
+  public selectRoute (type: number, route: string): void
   {
-    this._gortransService.getRouteLine(marsh, type, this._getRouteLinesCallback.bind(this) )
+    this._gortransService.getRouteLine(route, type, this._getRouteLinesCallback.bind(this) )
   }
 
   private _getRouteLinesCallback (id: string, trass: trassPoint []): void
@@ -128,12 +128,12 @@ class TransportService implements OnInit {
       ((buses: busData []) =>
       {
         // if (buses.length === 0) { return; }
-        // type + '-' + marsh
+        // type + '-' + route
         const separatedBuses = buses.reduce(
           (pv, cv) =>
           {
-            pv[cv.idTypetr + '-' + cv.marsh] = pv[cv.idTypetr + '-' + cv.marsh] || [];
-            pv[cv.idTypetr + '-' + cv.marsh].push(cv);
+            pv[cv.idTypetr + '-' + cv.route] = pv[cv.idTypetr + '-' + cv.route] || [];
+            pv[cv.idTypetr + '-' + cv.route].push(cv);
             return pv;
           },
           {}

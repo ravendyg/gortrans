@@ -1,6 +1,6 @@
 declare type routeType =
 {
-	marsh: string,
+	route: string,
 	name: string,
 	stopb: string,
 	stope: string
@@ -14,7 +14,7 @@ declare type routesType =
 	trolleys: routeType []
 };
 
-declare type marshListResponse =
+declare type routesListResponse =
 {
 	type: number,
 	ways: routeType []
@@ -28,17 +28,18 @@ declare type trassPoint =
 	lat: number,
 	lng: number
 };
+declare type trass =
+{
+	pc: string,
+	route: string,
+	u: trassPoint []
+};
 
 declare type trassPointsResponse =
 {
 	trasses:
 	{
-		r:
-		{
-			pc: string,
-			marsh: string,
-			u: trassPoint []
-		} []
+		r: trass []
 	} []
 };
 
@@ -67,7 +68,7 @@ declare type busData =
 {
 	title: string,
 	idTypetr: string,
-	marsh: string,
+	route: string,
 	graph: number,
 	direction: string,
 	lat: number,
@@ -104,3 +105,14 @@ declare type busIcon =
 	color: string,
 	name: string
 };
+
+declare type upToDateVerification =
+{
+	timestamp: number,
+	routesFlag: boolean,
+	trassFlag: boolean,
+	routes?: routesListResponse [],
+	trasses?: trass [],
+};
+
+declare var PromiseAll: any;
