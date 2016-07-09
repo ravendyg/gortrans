@@ -105,10 +105,20 @@ function _syncronize (): Promise<any>
 								localStorage.setItem('routesTimestamp', ''+getTimestamp());
 								resolve();
 							},
-							err => reject(err)
+							err =>
+							{
+								console.log(err);
+								// hope that there is data in DB
+								resolve();
+							}
 						);
 				},
-				err => reject(err)
+				err =>
+				{
+					console.log(err);
+					// hope that there is data in DB
+					resolve();
+				}
 			);
 	}
 	return new Promise( main );
@@ -130,6 +140,11 @@ function _updateRoutes (flag, routes): Observable<void>
 				const request = store.put(routes, 'all');
 				request.addEventListener(
 					'success',
+					() => observer.next(true)
+				);
+				request.addEventListener(
+					// hope that there is data in DB
+					'error',
 					() => observer.next(true)
 				);
 			}
