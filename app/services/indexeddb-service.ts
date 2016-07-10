@@ -97,10 +97,10 @@ class IndexedDbService {
 				{
 					const transaction = DB.transaction([routePointsStoreName], "readwrite");
 					const store = transaction.objectStore(routePointsStoreName);
-					const request = store.get('all');
+					const request = store.get(id);
 					request.addEventListener(
 						'success',
-						() => resolve( request.result )
+						() => resolve( request.result.u )
 					);
 				}
 			)

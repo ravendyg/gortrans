@@ -38,9 +38,7 @@ class GortransApiService implements OnInit{
 		}
 		else
 		{
-			// this._getRoutes()
 			this._indexedDbService.getRoutes()
-			// .subscribe(
 			.then(
         (routes: routesListResponse [] ) =>
 				{
@@ -83,19 +81,22 @@ class GortransApiService implements OnInit{
 		cb: (id: string, route: trassPoint []) => any
 	): void
 	{
-		if (this._lines[ type + '-' + route])
+		const id = type + '-' + route;
+		if (this._lines[id])
 		{	// already fetched
-			cb( type + '-' + route, this._lines[ type + '-' + route]);
+			cb( id, this._lines[id]);
 		}
 		else
 		{
-			this._getRouteLine(type, route)
-			.subscribe(
+			this._indexedDbService.getRouteLine(id)
+			.then(
 				((trass: trassPoint []) =>
 				{
-					this._lines[ type + '-' + route] = trass;
-					cb( type + '-' + route, trass);
-				}).bind(this),
+					this._lines[id] = trass;
+					cb( id, trass);
+				}).bind(this)
+			)
+			.catch(
 				err => console.log(err)
 			)
 			;
@@ -150,43 +151,6 @@ class GortransApiService implements OnInit{
 							ramp: e.ramp
 						})
 					);
-				}
-			)
-			.catch( this._handleHttpError )
-			;
-	}
-
-	// // get list of routes from gortrans
-	// private _getRoutes (): Observable<routesListResponse []>
-	// {
-	// 	return this._http
-	// 		.get( this._config.rootUrl + this._config.listRoutes )
-	// 		.map( (resp: Response) => <routesListResponse []>resp.json() )
-	// 		.catch( this._handleHttpError )
-	// 		;
-	// }
-
-	/** get list of point for specified route
-	 * @type
-	 * @route
-	 **/
-	private _getRouteLine (type: number, route: string): Observable<trassPoint []>
-	{
-		return this._http
-			.get( this._config.rootUrl + this._getTrassUrl(type, route) )
-			.map(
-				(resp: Response) =>
-				{
-					const parsedRes = <trassPointsResponse>resp.json();
-					return parsedRes.trasses[0].r[0].u
-						.map(
-							e =>
-							{
-								e.lat = +e.lat;
-								e.lng = +e.lng;
-								return e;
-							}
-						);
 				}
 			)
 			.catch( this._handleHttpError )
