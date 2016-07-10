@@ -1,15 +1,25 @@
-<ion-content padding class="getting-started">
+<ion-content padding id="map-wrapper">
+  <div id="bus-icons-list">
+    <div
+      *ngFor="let icon of busIcons; trackBy: icon?.id"
+      class="route-icon"
+      data-type="icon-div"
+      [attr.data-id]="icon.id"
+    >
+<!--(click)="zoomToRoute(icon.id)"-->
+<!--(click)="removeRoute(icon.id)"-->
+      <span class="icon-name {{icon.color}}">{{icon.name}}</span>
+      <img [src]="icon.img">
+    </div>
+  </div>
 
-  <h3>Welcome to your first Ionic app!</h3>
+  <ion-buttons start style="position: fixed;">
+    <button fab fab-top menuToggle style="margin-left: 15px;">
+      <ion-icon name="search"></ion-icon>
+    </button>
+  </ion-buttons>
 
-  <p>
-    This starter project is our way of helping you get a functional app running in record time.
-  </p>
-  <p>
-    Follow along on the tutorial section of the Ionic docs!
-  </p>
-  <p>
-    <button primary menuToggle>Toggle Menu</button>
-  </p>
+  <div id="map"></div>
+
 
 </ion-content>
