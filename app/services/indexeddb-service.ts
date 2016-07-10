@@ -81,6 +81,29 @@ class IndexedDbService {
 		}
 		return new Promise( main );
 	}
+
+	public getRouteLine (id): Promise<trassPoint []>
+	{
+		function main (resolve, reject)
+		{
+			_sync.
+			then(
+				() =>
+				{
+					const transaction = DB.transaction([routePointsStoreName], "readwrite");
+					const store = transaction.objectStore(routePointsStoreName);
+					const request = store.get('all');
+					request.addEventListener(
+						'success',
+						() => resolve( request.result )
+					);
+				}
+			)
+			.catch( err => reject(err) )
+			;
+		}
+		return new Promise( main );
+	}
 }
 
 /**
@@ -115,7 +138,7 @@ function _syncronize (): Promise<any>
 				},
 				err =>
 				{
-					console.log(err);
+					console.log('sync error', (err));
 					// hope that there is data in DB
 					resolve();
 				}
@@ -137,7 +160,50 @@ function _updateRoutes (flag, routes): Observable<void>
 			{
 				const transaction = DB.transaction([routesStoreName], "readwrite");
 				const store = transaction.objectStore(routesStoreName);
-				const request = store.put(routes, 'all');
+				putIntoDb(store, routes, 'all')
+				.then(
+					flag => observer.next(true)
+				)
+				.catch(
+					flag => observer.next(true)
+				);
+			}
+		}
+	);
+}
+
+function putIntoDb (store, data, key)
+{
+	function main (resolve, reject)
+	{
+		const request = store.put(data, key);
+		request.addEventListener(
+			'success',
+			() => resolve(true)
+		);
+		request.addEventListener(
+			// hope that there is data in DB
+			'error',
+			() => reject(true)
+		);
+	}
+	return new Promise( main );
+}
+
+function _updateRouteLines (flag, routeLines): Observable<void>
+{
+	return Observable.create(
+		observer =>
+		{
+			if (flag)
+			{
+				observer.next(true);
+			}
+			else
+			{
+				const transaction = DB.transaction([routePointsStoreName], "readwrite");
+				const store = transaction.objectStore(routePointsStoreName);
+				const request = store.put(routeLines, 'all');
 				request.addEventListener(
 					'success',
 					() => observer.next(true)
@@ -152,28 +218,10 @@ function _updateRoutes (flag, routes): Observable<void>
 	);
 }
 
-function _updateRouteLines (flag, routeLines): Observable<void>
-{
-	return Observable.create(
-		observer =>
-		{
-			if (flag)
-			{
-				observer.next(true);
-			}
-			else
-			{	//**********PLUG
-				// here need to store it into db and then resolve
-				observer.next(true);
-			}
-		}
-	);
-}
-
 /**
- * return UNIX timestamp in days
+ * return UNIX timestamp
  */
 function getTimestamp ()
 {
-	return Math.round( Date.now() / 1000 / 60 / 60 / 24);
+	return Math.round( Date.now() / 1000 );/// 60 / 60 / 24);
 }

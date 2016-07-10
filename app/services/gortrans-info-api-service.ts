@@ -4,60 +4,31 @@ import { Injectable, OnInit } from '@angular/core';
 import { Http, Response } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 
+
+const _apiRoot = 'http://nskgortrans.info';
+
 @Injectable()
 export /**
  * GortransInfoApiService
  */
 class GortransInfoApiService implements OnInit {
 
-	private _echoUrl: string;
-	private _listRoutes: string;
-	private _listTrasses: string;
-	private _listMarkers: string;
-
-	private _routes: routesType;
-
-	private _lines: { [id: string]: trassPoint [] };
-
 	constructor(private _http: Http)
 	{
-		this._echoUrl = 'http://excur.info:3006';
-		this._listRoutes = '?url=http://maps.nskgortrans.ru/listmarsh.php?r&r=true';
-		this._lines = {};
 	}
 
 	public ngOnInit (): void
 	{
 	}
 
-		// get list of routes from gortrans
+	// get list of changes from .info
 	public synchronize (timestamp: number): Observable<upToDateVerification>
 	{
-		return Observable.range(0,1)
-		// return this._http
-		// 	.get( this._echoUrl + this._listRoutes + '&timestamp=' + timestamp)
+		return this._http
+			.get( _apiRoot + '/sync?' + 'timestamp=' + timestamp)
 			.map(
-				(resp: number): upToDateVerification =>
-				{
-					return {
-						routesFlag: true,
-						routes: [],
-						trassFlag: true,
-						trasses: []
-					};
-				}
+				(resp: Response): upToDateVerification => <upToDateVerification>resp.json()
 			)
-			// .map(
-			// 	(resp: Response): upToDateVerification =>
-			// 	{
-			// 		return {
-			// 			routesFlag: false,
-			// 			routes: <routesListResponse []>resp.json(),
-			// 			trassFlag: true,
-			// 			trasses: []
-			// 		};
-			// 	}
-			// )
 			.catch( this._handleHttpError )
 			;
 	}
@@ -67,7 +38,6 @@ class GortransInfoApiService implements OnInit {
 		caught: Observable<any>
 	): Observable<any>
 	{
-		console.log(err);
-		return Observable.throw(err.json().error || 'Server error');
+		return Observable.throw(err || 'Server error');
 	}
 }
