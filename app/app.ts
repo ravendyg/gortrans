@@ -1,52 +1,112 @@
-import {Component, ViewChild} from '@angular/core';
+import {Component, ViewChild, OnInit} from '@angular/core';
+import { HTTP_PROVIDERS } from '@angular/http';
+import 'rxjs/Rx';
 import {ionicBootstrap, Platform, MenuController, Nav} from 'ionic-angular';
 import {StatusBar} from 'ionic-native';
 import {MapPage} from './pages/map/map';
-import {ListPage} from './pages/list/list';
+
+import {IndexedDbService} from './services/indexeddb-service';
+import {GortransInfoApiService} from './services/gortrans-info-api-service';
+import {GortransApiService} from './services/gortrans-api-service';
+import {TransportService} from './services/transport-service';
+import {ConfigService} from './services/config-service';
 
 
 @Component({
   templateUrl: 'build/app.html'
 })
-class MyApp {
+class MyApp implements OnInit {
   @ViewChild(Nav) nav: Nav;
 
   public app: any;
-
-  // make HelloIonicPage the root (or first) page
   rootPage: any = MapPage;
-  pages: Array<{title: string, component: any}>;
+
+  public buses: any [];
+  public smallBuses: any [];
+  public trams: any [];
+  public trolleys: any [];
+
+  public searchRouteName: string;
+
+  private _routes: routesType;
+
+
 
   constructor(
     private platform: Platform,
-    private menu: MenuController
+    private menu: MenuController,
+    private _gortransService: GortransApiService,
+    private _transportService: TransportService
   ) {
     this.initializeApp();
 
-    // set our app's pages
-    this.pages = [
-      { title: 'Map', component: MapPage },
-      // { title: 'My First List', component: ListPage }
-    ];
+    this.buses = [];
+    this.smallBuses = [];
+    this.trams = [];
+    this.trolleys = [];
+
+    this.searchRouteName = '';
   }
 
-  initializeApp() {
+  initializeApp (): void
+  {
     this.platform.ready().then(() => {
       // Okay, so the platform is ready and our plugins are available.
       // Here you can do any higher level native things you might need.
       StatusBar.styleDefault();
-
-      this._registerBackButtonMenuHandler();
     });
   }
 
-  openPage(page)
-  {
-    // close the menu when clicking a link from the menu
-    this.menu.close();
-    // navigate to the new page if it is not the current page
-    this.nav.setRoot(page.component);
+  public ngOnInit (): void
+  { // try to set up 'close menu on back button'
+    var menuInter = setInterval(
+      () =>
+      {
+        if (this.menu.getMenus().length > 0)
+        {
+          this._registerBackButtonMenuHandler();
+          clearInterval(menuInter);
+        }
+      },
+      100
+    );
+    // get list of route
+    this._gortransService.getRoutes(
+      routes =>
+      {
+        this._routes = routes;
+      }
+    );
   }
+
+  public onSearchInput (): void
+  {
+    if (this.searchRouteName.length > 0)
+    {
+      this.buses = this._routes.buses.filter( e => !!e.name.match(this.searchRouteName) );
+      this.smallBuses = this._routes.smallBuses.filter( e => !!e.name.match(this.searchRouteName) );
+      this.trams = this._routes.trams.filter( e => !!e.name.match(this.searchRouteName) );
+      this.trolleys = this._routes.trolleys.filter( e => !!e.name.match(this.searchRouteName) );
+    }
+    else
+    {
+      this.buses = this.smallBuses = this.trams = this.trolleys = [];
+    }
+  }
+
+  public selectRoute (type: number, route: string): void
+  {
+    this._transportService.selectRoute(type, route);
+    this.menu.getMenus()[0].close();
+  }
+
+  // openPage(page)
+  // {
+  //   // close the menu when clicking a link from the menu
+  //   this.menu.close();
+  //   // navigate to the new page if it is not the current page
+  //   this.nav.setRoot(page.component);
+  // }
 
   private _registerBackButtonMenuHandler()
   {
@@ -65,6 +125,11 @@ class MyApp {
           },
           10
         );
+        // set tel input, default didn't work
+        (<HTMLInputElement>document
+          .getElementById('route-search')
+          .querySelector('.searchbar-input')
+        ).type = 'tel';
       }
     );
     // remove listener when closed
@@ -81,4 +146,14 @@ class MyApp {
   }
 }
 
-ionicBootstrap(MyApp);
+ionicBootstrap(
+  MyApp,
+  [
+    HTTP_PROVIDERS,
+    ConfigService,
+    GortransInfoApiService,
+    GortransApiService,
+    IndexedDbService,
+    TransportService
+  ]
+);
