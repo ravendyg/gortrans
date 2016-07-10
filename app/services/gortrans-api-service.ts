@@ -4,6 +4,7 @@ import { Injectable, OnInit } from '@angular/core';
 import { Http, Response } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 
+import {ConfigService} from './config-service';
 import {IndexedDbService} from './indexeddb-service';
 
 @Injectable()
@@ -12,21 +13,16 @@ export /**
  */
 class GortransApiService implements OnInit{
 
-	private _echoUrl: string;
-	private _listRoutes: string;
-	private _listTrasses: string;
-	private _listMarkers: string;
-
 	private _routes: routesType;
 
 	private _lines: { [id: string]: trassPoint [] };
 
-	constructor(private _http: Http, private _indexedDbService: IndexedDbService)
+	constructor(
+		private _http: Http,
+		private _indexedDbService: IndexedDbService,
+		private _config: ConfigService
+	)
 	{
-		this._echoUrl = 'http://excur.info:3006';
-		this._listRoutes = '?url=http://maps.nskgortrans.ru/listmarsh.php?r&r=true';
-		this._listTrasses = '?url=http://maps.nskgortrans.ru/trasses.php?r=';
-		this._listMarkers = '?url=http://maps.nskgortrans.ru/markers.php?r=';
 		this._lines = {};
 	}
 
@@ -131,7 +127,7 @@ class GortransApiService implements OnInit{
 			''
 		);
 		return this._http
-			.get( this._echoUrl + this._listMarkers + query)
+			.get( this._config.rootUrl + this._config.listMarkers + query)
 			.map(
 				(resp: Response) =>
 				{
@@ -164,7 +160,7 @@ class GortransApiService implements OnInit{
 	// private _getRoutes (): Observable<routesListResponse []>
 	// {
 	// 	return this._http
-	// 		.get( this._echoUrl + this._listRoutes )
+	// 		.get( this._config.rootUrl + this._config.listRoutes )
 	// 		.map( (resp: Response) => <routesListResponse []>resp.json() )
 	// 		.catch( this._handleHttpError )
 	// 		;
@@ -177,7 +173,7 @@ class GortransApiService implements OnInit{
 	private _getRouteLine (type: number, route: string): Observable<trassPoint []>
 	{
 		return this._http
-			.get( this._echoUrl + this._getTrassUrl(type, route) )
+			.get( this._config.rootUrl + this._getTrassUrl(type, route) )
 			.map(
 				(resp: Response) =>
 				{
@@ -199,7 +195,7 @@ class GortransApiService implements OnInit{
 
 	private _getTrassUrl (type: number, route: string): string
 	{
-		return this._listTrasses + type + '-' + route + '-W';
+		return this._config.listTrasses + type + '-' + route + '-W';
 	}
 
 	private _handleHttpError (

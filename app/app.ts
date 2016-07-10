@@ -9,6 +9,7 @@ import {IndexedDbService} from './services/indexeddb-service';
 import {GortransInfoApiService} from './services/gortrans-info-api-service';
 import {GortransApiService} from './services/gortrans-api-service';
 import {TransportService} from './services/transport-service';
+import {ConfigService} from './services/config-service';
 
 
 @Component({
@@ -149,6 +150,7 @@ ionicBootstrap(
   MyApp,
   [
     HTTP_PROVIDERS,
+    ConfigService,
     GortransInfoApiService,
     GortransApiService,
     IndexedDbService,

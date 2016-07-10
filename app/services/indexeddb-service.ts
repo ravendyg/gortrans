@@ -210,16 +210,6 @@ function _updateRouteLines (flag, routeLines): Observable<void>
 					)
 					;
 				}
-				// const request = store.put(routeLines, 'all');
-				// request.addEventListener(
-				// 	'success',
-				// 	() => observer.next(true)
-				// );
-				// request.addEventListener(
-				// 	// hope that there is data in DB
-				// 	'error',
-				// 	() => observer.next(true)
-				// );
 			}
 		}
 	);
