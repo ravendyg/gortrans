@@ -3,6 +3,7 @@
 import { Injectable, OnInit } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 
+import {ConfigService} from './config-service';
 import {GortransInfoApiService} from './gortrans-info-api-service';
 
 
@@ -50,13 +51,17 @@ export /**
  */
 class IndexedDbService {
 
-	constructor(private _gortransInfo: GortransInfoApiService)
+	constructor(
+		private _gortransInfo: GortransInfoApiService,
+		private _config: ConfigService
+	)
 	{
 		GortransInfo = this._gortransInfo;
 
 		_syncTimestamp = localStorage.getItem('routesTimestamp') || 0;
 
-		_sync = _syncronize();
+		_sync = _syncronize(this._config);
+
 	}
 
 	public getRoutes (): Promise<routesListResponse []>
@@ -111,7 +116,7 @@ class IndexedDbService {
  *
  * @resolve
  */
-function _syncronize (): Promise<any>
+function _syncronize (config: ConfigService): Promise<any>
 {
 	function main (resolve, reject)
 	{
@@ -135,6 +140,11 @@ function _syncronize (): Promise<any>
 								resolve();
 							}
 						);
+
+					if (dat.use)
+					{
+						config.changeRoot(dat.use);
+					}
 				},
 				err =>
 				{

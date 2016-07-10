@@ -112,6 +112,7 @@ declare type upToDateVerification =
 	trassFlag: boolean,
 	routes?: routesListResponse [],
 	trasses?: trass [],
+	use?: string	// url for proxy
 };
 
 declare var PromiseAll: any;
