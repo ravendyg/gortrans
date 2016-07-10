@@ -33,3 +33,85 @@ $colors: (
   dark:       #222,
   favorite:   #69BB7B
 );
+
+.route-list-header
+{
+  background-color: rgba(200,200,200,0.5);
+  font-size: 1.5em;
+  color: rgba(100,100,100,1);
+}
+.route-list-arrow
+{
+  float: right;
+  padding-right: 20px;
+}
+
+#map-wrapper
+{
+  padding: 0;
+  scroll-content
+  {
+    padding: 0;
+  }
+}
+
+#map
+{
+  height: 100%;
+  width: 100%;
+}
+
+.bus-stop
+{
+  z-index: 100;
+}
+.route-line
+{
+  z-index: 10;
+}
+
+#bus-icons-list
+{
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+  .route-icon
+  {
+    transition: transform 0.025 linear;
+    .red
+    {
+      color: red;
+    }
+    .blue
+    {
+      color: blue;
+    }
+    .green
+    {
+      color: green;
+    }
+    .icon-name
+    {
+      font-size: 24px;
+      font-weight: 800;
+      position: relative;
+      display: inline-block;
+      bottom: 14px;
+      right: 5px;
+      width: 34px;
+      white-space: nowrap;
+      text-align: right;
+    }
+    img
+    {
+      max-height: 44px;
+      max-width: 44px;
+    }
+  }
+}
+
+.bus-stop-marker
+{
+  display: none !important;
+}
