@@ -172,6 +172,59 @@ function _updateRoutes (flag, routes): Observable<void>
 	);
 }
 
+function _updateRouteLines (flag, routeLines): Observable<void>
+{
+	return Observable.create(
+		observer =>
+		{
+			if (flag)
+			{
+				observer.next(true);
+			}
+			else
+			{
+				const transaction = DB.transaction([routePointsStoreName], "readwrite");
+				const store = transaction.objectStore(routePointsStoreName);
+
+				var promises = [];
+				for (var k = 0; k < routeLines.length; k++)
+				{
+					promises.push(
+						putIntoDb(store, routeLines[k].line, routeLines[k].id)
+					);
+				}
+				if (promises.length === 0) { observer.next(true); }
+				else {
+					Promise.all(promises)
+					.then(
+						resp =>
+						{
+							observer.next(true);
+						}
+					)
+					.catch(
+						err => {
+							console.error(err);
+							observer.next(true);
+						}
+					)
+					;
+				}
+				// const request = store.put(routeLines, 'all');
+				// request.addEventListener(
+				// 	'success',
+				// 	() => observer.next(true)
+				// );
+				// request.addEventListener(
+				// 	// hope that there is data in DB
+				// 	'error',
+				// 	() => observer.next(true)
+				// );
+			}
+		}
+	);
+}
+
 function putIntoDb (store, data, key)
 {
 	function main (resolve, reject)
@@ -188,34 +241,6 @@ function putIntoDb (store, data, key)
 		);
 	}
 	return new Promise( main );
-}
-
-function _updateRouteLines (flag, routeLines): Observable<void>
-{
-	return Observable.create(
-		observer =>
-		{
-			if (flag)
-			{
-				observer.next(true);
-			}
-			else
-			{
-				const transaction = DB.transaction([routePointsStoreName], "readwrite");
-				const store = transaction.objectStore(routePointsStoreName);
-				const request = store.put(routeLines, 'all');
-				request.addEventListener(
-					'success',
-					() => observer.next(true)
-				);
-				request.addEventListener(
-					// hope that there is data in DB
-					'error',
-					() => observer.next(true)
-				);
-			}
-		}
-	);
 }
 
 /**
