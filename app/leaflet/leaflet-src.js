@@ -7,6 +7,54 @@
 var oldL = window.L,
     L = {};
 
+/**
+ * save data into cache
+ */
+const cacheHandler = {
+	c: null,
+	/** open cache */
+	init ()
+	{
+		this.c = caches.open('staticCache');
+	},
+	/** put request into cache */
+	put (req, data)
+	{
+		this.c
+		.then(
+			cache =>
+			{
+				cache.add(req, data);
+			}
+		)
+		.catch( err => { console.log(err); } )
+		;
+	}
+}
+cacheHandler.init();
+
+function preCache (cacheRequest)
+{
+	caches.match(cacheRequest)
+	.then(
+		cacheData =>
+		{
+			if (!cacheData)
+			{
+				fetch(cacheRequest)
+				.then(
+					function (response)
+					{
+						cacheHandler.put(cacheRequest, response);
+					}
+				);
+			}
+		}
+	);
+}
+
+var urlCreator = window.URL || window.webkitURL;
+
 L.version = '0.7.7';
 
 // define Leaflet for Node module pattern loaders, including Browserify
@@ -2853,13 +2901,88 @@ L.TileLayer = L.Class.extend({
 
 	// image-specific code (override to implement e.g. Canvas or SVG tile layer)
 
-	getTileUrl: function (tilePoint) {
-		return L.Util.template(this._url, L.extend({
-			s: this._getSubdomain(tilePoint),
-			z: tilePoint.z,
-			x: tilePoint.x,
-			y: tilePoint.y
-		}, this.options));
+	getTileUrl: function (tilePoint)
+	{
+		function main (resolve, reject)
+		{
+			var link = L.Util.template(this._url, L.extend({
+				s: this._getSubdomain(tilePoint),
+				z: tilePoint.z,
+				x: tilePoint.x,
+				y: tilePoint.y
+			}, this.options));
+
+			const req = new Request(link);
+			// first try in cache
+			caches.match(req)
+			.then(
+				function (cacheData)
+				{
+					if (cacheData)
+					{
+						cacheData.blob()
+						.then(
+							function (blob)
+							{
+								var imageUrl = urlCreator.createObjectURL( blob );
+								resolve(imageUrl);
+							}
+						);
+					}
+					else
+					{
+						fetch(req)
+						.then(
+							function (response)
+							{
+								response.blob()
+								.then(
+									function (blob)
+									{
+										var imageUrl = urlCreator.createObjectURL( blob );
+										resolve(imageUrl);
+										cacheHandler.put(req, response);
+									}
+								);
+							}
+						)
+						.catch(
+							function (err) { console.error(err); }
+						)
+					}
+				}
+			)
+			.catch(
+				function (err) { console.error(err); }
+			);
+
+			// preload other scales
+			var z, mult, cacheUrl, cacheRequest;
+			const currentZ = tilePoint.z;
+			for (z = 8; z < 18; z++)
+			{
+				if (z !== currentZ)
+				{
+					mult = Math.pow(2, currentZ - z );
+					tilePoint.x = Math.round(tilePoint.x * mult);
+					tilePoint.y = Math.round(tilePoint.y * mult);
+					tilePoint.z = z;
+
+					cacheUrl =
+						L.Util.template(this._url, L.extend({
+							s: this._getSubdomain(tilePoint),
+							z: tilePoint.z,
+							x: tilePoint.x,
+							y: tilePoint.y
+						}, this.options));
+
+					cacheRequest = new Request(link);
+
+					preCache(cacheRequest);
+				}
+			}
+		}
+		return new Promise( main.bind(this) );
 	},
 
 	_getWrapTileNum: function () {
@@ -2925,7 +3048,14 @@ L.TileLayer = L.Class.extend({
 		tile.onerror = this._tileOnError;
 
 		this._adjustTilePoint(tilePoint);
-		tile.src     = this.getTileUrl(tilePoint);
+		// tile.src     = this.getTileUrl(tilePoint);
+		this.getTileUrl(tilePoint)
+		.then(
+			function (request)
+			{
+				tile.src = request;
+			}
+		);
 
 		this.fire('tileloadstart', {
 			tile: tile,
@@ -5054,7 +5184,7 @@ L.Path = (L.Path.SVG && !window.L_PREFER_CANVAS) || !L.Browser.canvas ? L.Path :
 		}
 
 		this._requestUpdate();
-		
+
 		this.fire('remove');
 		this._map = null;
 	},
@@ -8109,7 +8239,7 @@ L.Control.Attribution = L.Control.extend({
 				this.addAttribution(map._layers[i].getAttribution());
 			}
 		}
-		
+
 		map
 		    .on('layeradd', this._onLayerAdd, this)
 		    .on('layerremove', this._onLayerRemove, this);
