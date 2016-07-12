@@ -1,3 +1,5 @@
+declare var require: any;
+
 declare type routeType =
 {
 	route: string,

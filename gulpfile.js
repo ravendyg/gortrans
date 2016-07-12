@@ -38,7 +38,7 @@ var isRelease = argv.indexOf('--release') > -1;
 
 gulp.task('watch', ['clean'], function(done){
   runSequence(
-    ['sass', 'html', 'fonts', 'scripts', 'leaflet', 'image'],
+    ['sass', 'html', 'fonts', 'scripts', 'leaflet', 'imgcache', 'image'],
     function(){
       gulpWatch('app/**/*.scss', function(){ gulp.start('sass'); });
       gulpWatch('app/**/*.html', function(){ gulp.start('html'); });
@@ -49,7 +49,7 @@ gulp.task('watch', ['clean'], function(done){
 
 gulp.task('build', ['clean'], function(done){
   runSequence(
-    ['sass', 'html', 'fonts', 'scripts', 'leaflet', 'image'],
+    ['sass', 'html', 'fonts', 'scripts', 'leaflet', 'imgcache', 'image'],
     function(){
       buildBrowserify({
         minify: isRelease,
@@ -72,7 +72,13 @@ gulp.task(
   'leaflet',
   () => gulp
     .src('app/leaflet/**/*.*')
-    .pipe( gulp.dest('www/build/leaflet') )
+    .pipe( gulp.dest('www/build/vendor/leaflet') )
+);
+gulp.task(
+  'imgcache',
+  () => gulp
+    .src('node_modules/imgcache/lib/imgcache.js')
+    .pipe( gulp.dest('www/build/vendor') )
 );
 gulp.task('image', function () {
   gulp.src('./app/img/**/*.*')

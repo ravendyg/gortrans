@@ -29,8 +29,10 @@ request.addEventListener(
 	{
 		DB = (<IDBOpenDBRequest>ev.target).result;
 
-		DB.deleteObjectStore(routesStoreName);
-		DB.deleteObjectStore(routePointsStoreName);
+		for (var j = 0; j < DB.objectStoreNames.length; j++)
+		{
+			DB.deleteObjectStore( DB.objectStoreNames[j] );
+		}
 
 		DB.createObjectStore(routesStoreName);
 		DB.createObjectStore(routePointsStoreName);
