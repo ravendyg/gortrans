@@ -84,18 +84,14 @@ class GortransApiService implements OnInit{
 		}
 		else
 		{
-			this._indexedDbService.getRouteLine(id)
-			.then(
+			this._indexedDbService.getRouteLine(
+				id,
 				((trass: trassPoint []) =>
 				{
 					this._lines[id] = trass;
 					cb( id, trass);
 				}).bind(this)
-			)
-			.catch(
-				err => console.log(err)
-			)
-			;
+			);
 		}
 	}
 

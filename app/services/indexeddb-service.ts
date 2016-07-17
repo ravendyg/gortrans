@@ -68,7 +68,7 @@ class IndexedDbService {
 
 	}
 
-	public getRoutes (cb: (routes: routesListResponse []) => void): void//Promise<routesListResponse []>
+	public getRoutes (cb: (routes: routesListResponse []) => void): void
 	{	// load whatever is in the DB
 		loadRoutesFromDB()
 		.then(
@@ -103,31 +103,43 @@ class IndexedDbService {
 		);
 	}
 
-	public getRouteLine (id): Promise<trassPoint []>
-	{
-		function main (resolve, reject)
-		{	// here we can wait for sync somplete, because it is not immediately required
-			_sync.
-			then(
-				() =>
-				{
-					const transaction = DB.transaction([routePointsStoreName], "readwrite");
-					const store = transaction.objectStore(routePointsStoreName);
-					const request = store.get(id);
-					request.addEventListener(
-						'success',
-						() => resolve( request.result.u )
+	public getRouteLine (id: string, cb: (line: trassPoint []) => void): void
+	{	// load whatever is in the DB
+		loadRouteLineFromDB(id)
+		.then(
+			(line: trassPoint []) =>
+			{
+				cb(line);
+			},
+			err =>
+			{
+				console.error(err);
+				cb([]);
+			}
+		);
+
+		// wait for _sync
+		_sync.
+		then(
+			() =>
+			{
+				if (routesUpdateNeeded)
+				{	// something changed, exec callback again to refresh onthe user's side
+					loadRouteLineFromDB(id)
+					.then(
+						(line: trassPoint []) =>
+						{
+							cb(line);
+						},
+						err => { console.error(err); }
 					);
 				}
-			)
-			.catch( err => reject(err) )
-			;
-		}
-		return new Promise( main );
+			}
+		);
 	}
 }
 
-function loadRoutesFromDB ()
+function loadRoutesFromDB (): Promise<routesListResponse []>
 {
 	function main (resolve, reject)
 	{
@@ -137,6 +149,21 @@ function loadRoutesFromDB ()
 		request.addEventListener(
 			'success',
 			() => resolve( request.result )
+		);
+	}
+	return new Promise( main );
+}
+
+function loadRouteLineFromDB (id: string): Promise<trassPoint []>
+{
+	function main (resolve, reject)
+	{
+		const transaction = DB.transaction([routePointsStoreName], "readwrite");
+		const store = transaction.objectStore(routePointsStoreName);
+		const request = store.get(id);
+		request.addEventListener(
+			'success',
+			() => resolve( request.result.u )
 		);
 	}
 	return new Promise( main );

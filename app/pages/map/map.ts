@@ -1,4 +1,4 @@
-import {Component, OnInit, AfterViewChecked} from '@angular/core';
+import {Component, OnInit, AfterViewChecked, ChangeDetectorRef} from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import {TransportService} from '../../services/transport-service';
 
@@ -23,7 +23,7 @@ export class MapPage implements OnInit, AfterViewChecked
 
   public busIcons: busIcon [];
 
-  constructor(private _transportService: TransportService)
+  constructor(private _transportService: TransportService, private _ref: ChangeDetectorRef)
   {
     this._trackMapSize = true;
     this._actualRouteLines = {};
@@ -33,7 +33,7 @@ export class MapPage implements OnInit, AfterViewChecked
     this._buses = [];
 
     this.busIcons = [];
-
+window['we'] = this;
     this._routeColors = ['blue', 'green', 'red'];
 
     this._swipeouts = [];
@@ -334,9 +334,12 @@ window['mm'] = this._map;
 
     const img = `build/img/${this._typeToNames[type]}.png`;
 
-    this.busIcons.push({
-      id, color, img, name
-    });
+    this.busIcons.push( { id, color, img, name } );
+    // doesn't want to propagate changes into view without this hack
+    // NgZone didn't work either
+    setTimeout(
+      () => this._ref.detectChanges()
+    );
 
     // not pure !!!
     function _createStopMarker (e)
