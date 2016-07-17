@@ -38,8 +38,7 @@ class GortransApiService implements OnInit{
 		}
 		else
 		{
-			this._indexedDbService.getRoutes()
-			.then(
+			this._indexedDbService.getRoutes(
         (routes: routesListResponse [] ) =>
 				{
 					this._routes = {
@@ -68,9 +67,6 @@ class GortransApiService implements OnInit{
 					cb(this._routes);
 				}
       )
-			.catch(
-				err => console.log(err)
-			)
       ;
 		}
 	}
@@ -165,9 +161,12 @@ class GortransApiService implements OnInit{
 	private _handleHttpError (
 		err: Response,
 		caught: Observable<any>
-	): Observable<any>
+	): Observable <any []>
 	{
 		console.log(err);
-		return Observable.throw(err.json().error || 'Server error');
+		return Observable.create(
+			observer => observer.next([])
+		);
+		// return Observable.throw(err.json().error || 'Server error');
 	}
 }

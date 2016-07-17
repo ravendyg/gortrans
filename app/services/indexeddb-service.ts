@@ -13,6 +13,8 @@ var _sync: Promise<any>;
 
 var _routes: routesListResponse [] = [];
 
+var routesUpdateNeeded = false;
+
 
 /** indexedDb */
 var DB: IDBDatabase = null;
@@ -66,33 +68,45 @@ class IndexedDbService {
 
 	}
 
-	public getRoutes (): Promise<routesListResponse []>
-	{
-		function main (resolve, reject)
-		{
-			_sync.
-			then(
-				() =>
-				{
-					const transaction = DB.transaction([routesStoreName], "readwrite");
-					const store = transaction.objectStore(routesStoreName);
-					const request = store.get('all');
-					request.addEventListener(
-						'success',
-						() => resolve( request.result )
+	public getRoutes (cb: (routes: routesListResponse []) => void): void//Promise<routesListResponse []>
+	{	// load whatever is in the DB
+		loadRoutesFromDB()
+		.then(
+			(routes: routesListResponse []) =>
+			{
+				cb(routes);
+			},
+			err =>
+			{
+				console.error(err);
+				cb([]);
+			}
+		);
+
+		// wait for _sync
+		_sync.
+		then(
+			() =>
+			{
+				if (routesUpdateNeeded)
+				{	// something changed, exec callback again to refresh onthe user's side
+					loadRoutesFromDB()
+					.then(
+						(routes: routesListResponse []) =>
+						{
+							cb(routes);
+						},
+						err => { console.error(err); }
 					);
 				}
-			)
-			.catch( err => reject(err) )
-			;
-		}
-		return new Promise( main );
+			}
+		);
 	}
 
 	public getRouteLine (id): Promise<trassPoint []>
 	{
 		function main (resolve, reject)
-		{
+		{	// here we can wait for sync somplete, because it is not immediately required
 			_sync.
 			then(
 				() =>
@@ -111,6 +125,21 @@ class IndexedDbService {
 		}
 		return new Promise( main );
 	}
+}
+
+function loadRoutesFromDB ()
+{
+	function main (resolve, reject)
+	{
+		const transaction = DB.transaction([routesStoreName], "readwrite");
+		const store = transaction.objectStore(routesStoreName);
+		const request = store.get('all');
+		request.addEventListener(
+			'success',
+			() => resolve( request.result )
+		);
+	}
+	return new Promise( main );
 }
 
 /**
@@ -170,6 +199,8 @@ function _updateRoutes (flag, routes): Observable<void>
 			}
 			else
 			{
+				routesUpdateNeeded = true;
+
 				const transaction = DB.transaction([routesStoreName], "readwrite");
 				const store = transaction.objectStore(routesStoreName);
 				putIntoDb(store, routes, 'all')
