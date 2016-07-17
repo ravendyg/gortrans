@@ -33,6 +33,26 @@ const cacheHandler = {
 }
 cacheHandler.init();
 
+// function preCache (cacheRequest)
+// {
+// 	caches.match(cacheRequest)
+// 	.then(
+// 		cacheData =>
+// 		{
+// 			if (!cacheData)
+// 			{
+// 				fetch(cacheRequest)
+// 				.then(
+// 					function (response)
+// 					{
+// 						cacheHandler.put(cacheRequest, response);
+// 					}
+// 				);
+// 			}
+// 		}
+// 	);
+// }
+
 var urlCreator = window.URL || window.webkitURL;
 
 L.version = '0.7.7';
@@ -2935,6 +2955,32 @@ L.TileLayer = L.Class.extend({
 			.catch(
 				function (err) { console.error(err); }
 			);
+
+			// // preload other scales
+			// var z, mult, cacheUrl, cacheRequest;
+			// const currentZ = tilePoint.z;
+			// for (z = 8; z < 18; z++)
+			// {
+			// 	if (z !== currentZ)
+			// 	{
+			// 		mult = Math.pow(2, currentZ - z );
+			// 		tilePoint.x = Math.round(tilePoint.x * mult);
+			// 		tilePoint.y = Math.round(tilePoint.y * mult);
+			// 		tilePoint.z = z;
+
+			// 		cacheUrl =
+			// 			L.Util.template(this._url, L.extend({
+			// 				s: this._getSubdomain(tilePoint),
+			// 				z: tilePoint.z,
+			// 				x: tilePoint.x,
+			// 				y: tilePoint.y
+			// 			}, this.options));
+
+			// 		cacheRequest = new Request(link);
+
+			// 		preCache(cacheRequest);
+			// 	}
+			// }
 		}
 		return new Promise( main.bind(this) );
 	},
