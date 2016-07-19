@@ -114,6 +114,7 @@ declare type upToDateVerification =
 	trassFlag: boolean,
 	routes?: routesListResponse [],
 	trasses?: trass [],
+	stops?: {[id: string]: trassPoint},
 	use?: string	// url for proxy
 };
 

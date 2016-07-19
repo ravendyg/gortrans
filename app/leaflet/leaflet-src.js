@@ -7,31 +7,136 @@
 var oldL = window.L,
     L = {};
 
+var dbName = 'gortransLeaflet';
+var storeName = 'map';
+
+var getDB = new Promise(
+	(resolve, reject) =>
+	{
+		var request = indexedDB.open(dbName, 1);
+
+		request.addEventListener(
+			'upgradeneeded',
+			ev =>
+			{
+				var DB = ev.target.result;
+
+				while (DB.objectStoreNames.length > 0)
+				{
+					DB.deleteObjectStore( DB.objectStoreNames[0] );
+				}
+
+				DB.createObjectStore(storeName);
+			}
+		);
+
+		request.addEventListener(
+			'success',
+			ev =>
+			{
+				resolve(
+					ev.target.result
+				);
+			}
+		);
+
+		request.addEventListener(
+			'error',
+			err =>
+			{
+				reject(err);
+			}
+		);
+	}
+)
+
+
 /**
  * save data into cache
  */
 const cacheHandler = {
 	c: null,
+	links: {},
 	/** open cache */
 	init ()
 	{
-		this.c = caches.open('staticCache');
+		this.c = new Promise(
+			(resolve, reject) =>
+			{
+				resolve();
+			}
+		);
 	},
 	/** put request into cache */
-	put (req, data)
+	put (key, data)
 	{
-		this.c
-		.then(
-			cache =>
+		console.log(key, data);
+		return new Promise(
+			(resolve, reject) =>
 			{
-				cache.add(req, data);
+				getDB
+				.then(
+					DB =>
+					{
+						const transaction = DB.transaction([storeName], "readwrite");
+						const store = transaction.objectStore(storeName);
+						const request = store.put(data, key);
+						request.addEventListener(
+							'success',
+							() =>
+							{
+								cacheHandler.links[key] = true;
+								resolve( true );
+							}
+						);
+						request.addEventListener(
+							'error',
+							err =>
+							{
+								reject( err );
+							}
+						);
+					}
+				);
 			}
-		)
-		.catch( err => { console.log(err); } )
-		;
+		);
+	},
+
+	get (key)
+	{
+		return new Promise(
+			(resolve, reject) =>
+			{
+				getDB
+				.then(
+					DB =>
+					{
+						const transaction = DB.transaction([storeName], "readwrite");
+						const store = transaction.objectStore(storeName);
+						const request = store.get(key);
+						request.addEventListener(
+							'success',
+							() =>
+							{
+								resolve( request.result );
+							}
+						);
+						request.addEventListener(
+							'error',
+							err =>
+							{
+								reject( err );
+							}
+						);
+					}
+				)
+			}
+		);
 	}
 }
 cacheHandler.init();
+
+var urlCreator = window.URL || window.webkitURL;
 
 // function preCache (cacheRequest)
 // {
@@ -2912,49 +3017,96 @@ L.TileLayer = L.Class.extend({
 				y: tilePoint.y
 			}, this.options));
 
-			const req = new Request(link);
-			// first try in cache
-			caches.match(req)
+			// check in db
+			// if not, fetch
+			// and store to db
+			cacheHandler.c
 			.then(
-				function (cacheData)
+				() =>
 				{
-					if (cacheData)
+					if (!cacheHandler.links[link])
 					{
-						cacheData.blob()
+						cacheHandler.get(link)
 						.then(
-							function (blob)
+							blob =>
 							{
-								var imageUrl = urlCreator.createObjectURL( blob );
-								resolve(imageUrl);
-							}
-						);
-					}
-					else
-					{
-						fetch(req)
-						.then(
-							function (response)
-							{
-								response.blob()
-								.then(
-									function (blob)
-									{
-										var imageUrl = urlCreator.createObjectURL( blob );
-										resolve(imageUrl);
-										cacheHandler.put(req, response);
-									}
+								resolve(
+									urlCreator.createObjectURL( blob )
 								);
 							}
 						)
-						.catch(
-							function (err) { console.error(err); }
-						)
+					}
+					else
+					{
+						var xhr = new XMLHttpRequest();
+						xhr.open( "GET", link, true );
+
+						xhr.responseType = "arraybuffer";
+
+						xhr.onload = function( e ) {
+							var blob = new Blob( [ this.response ], { type: "image/png" } );
+							cacheHandler.put(link, blob);
+
+							resolve(
+								urlCreator.createObjectURL( blob )
+							);
+						};
+
+						xhr.onerror = function (e) {
+							console.error(e);
+						}
+
+						xhr.send();
 					}
 				}
 			)
-			.catch(
-				function (err) { console.error(err); }
-			);
+
+
+
+
+			// const req = new Request(link);
+			// // first try in cache
+			// caches.match(req)
+			// .then(
+			// 	function (cacheData)
+			// 	{
+			// 		if (cacheData)
+			// 		{
+			// 			cacheData.blob()
+			// 			.then(
+			// 				function (blob)
+			// 				{
+			// 					var imageUrl = urlCreator.createObjectURL( blob );
+			// 					resolve(imageUrl);
+			// 				}
+			// 			);
+			// 		}
+			// 		else
+			// 		{
+			// 			fetch(req)
+			// 			.then(
+			// 				function (response)
+			// 				{
+			// 					response.blob()
+			// 					.then(
+			// 						function (blob)
+			// 						{
+			// 							var imageUrl = urlCreator.createObjectURL( blob );
+			// 							resolve(imageUrl);
+			// 							cacheHandler.put(req, response);
+			// 						}
+			// 					);
+			// 				}
+			// 			)
+			// 			.catch(
+			// 				function (err) { console.error(err); }
+			// 			)
+			// 		}
+			// 	}
+			// )
+			// .catch(
+			// 	function (err) { console.error(err); }
+			// );
 
 			// // preload other scales
 			// var z, mult, cacheUrl, cacheRequest;
