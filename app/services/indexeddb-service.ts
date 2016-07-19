@@ -21,8 +21,9 @@ var DB: IDBDatabase = null;
 const dbName = "gortrans";
 const routesStoreName = "routes";
 const routePointsStoreName = "routePoints";
+const stopsStoreName = "busStops";
 
-var request = indexedDB.open(dbName, 5);
+var request = indexedDB.open(dbName, 6);
 
 
 request.addEventListener(
@@ -31,13 +32,16 @@ request.addEventListener(
 	{
 		DB = (<IDBOpenDBRequest>ev.target).result;
 
-		for (var j = 0; j < DB.objectStoreNames.length; j++)
+		while (DB.objectStoreNames.length > 0)
 		{
-			DB.deleteObjectStore( DB.objectStoreNames[j] );
+			DB.deleteObjectStore( DB.objectStoreNames[0] );
 		}
 
 		DB.createObjectStore(routesStoreName);
 		DB.createObjectStore(routePointsStoreName);
+		DB.createObjectStore(stopsStoreName);
+
+		localStorage.setItem('routesTimestamp', '0');
 	}
 );
 
@@ -184,6 +188,7 @@ function _syncronize (config: ConfigService): Promise<any>
 				{
 					const call1 = _updateRoutes(dat.routesFlag, dat.routes);
 					const call2 = _updateRouteLines(dat.trassFlag, dat.trasses);
+					const call3 = _updateBusStops(dat.trassFlag, dat.stops);
 					Observable.zip(call1, call2)
 						.subscribe(
 							res =>
@@ -280,6 +285,31 @@ function _updateRouteLines (flag, routeLines): Observable<void>
 					)
 					;
 				}
+			}
+		}
+	);
+}
+
+function _updateBusStops (flag, busStops): Observable<void>
+{
+	return Observable.create(
+		observer =>
+		{
+			if (flag)
+			{
+				observer.next(true);
+			}
+			else
+			{
+				const transaction = DB.transaction([stopsStoreName], "readwrite");
+				const store = transaction.objectStore(stopsStoreName);
+				putIntoDb(store, busStops, 'all')
+				.then(
+					flag => observer.next(true)
+				)
+				.catch(
+					flag => observer.next(true)
+				);
 			}
 		}
 	);
