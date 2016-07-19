@@ -56,46 +56,69 @@ var getDB = new Promise(
  */
 const cacheHandler = {
 	c: null,
-	links: {},
+	links: null,
+	DB: null,
+	interval: -1,
 	/** open cache */
 	init ()
 	{
 		this.c = new Promise(
 			(resolve, reject) =>
 			{
-				resolve();
-			}
-		);
-	},
-	/** put request into cache */
-	put (key, data)
-	{
-		console.log(key, data);
-		return new Promise(
-			(resolve, reject) =>
-			{
 				getDB
 				.then(
 					DB =>
 					{
+						cacheHandler.DB = DB;
+
 						const transaction = DB.transaction([storeName], "readwrite");
 						const store = transaction.objectStore(storeName);
-						const request = store.put(data, key);
+						const request = store.get('list');
 						request.addEventListener(
 							'success',
 							() =>
 							{
-								cacheHandler.links[key] = true;
-								resolve( true );
+								cacheHandler.links = request.result || {};
+								cacheHandler.initLinksSave();
+								resolve(true);
 							}
 						);
 						request.addEventListener(
 							'error',
 							err =>
 							{
-								reject( err );
+								cacheHandler.links = {};
+								cacheHandler.initLinksSave();
+								resolve(true);
 							}
 						);
+					}
+				)
+			}
+		);
+	},
+	/** put request into cache */
+	put (key, data)
+	{
+		return new Promise(
+			(resolve, reject) =>
+			{
+				const transaction = cacheHandler.DB.transaction([storeName], "readwrite");
+				const store = transaction.objectStore(storeName);
+				const request = store.put(data, key);
+				request.addEventListener(
+					'success',
+					() =>
+					{
+						cacheHandler.links[key] = true;
+						resolve( true );
+					}
+				);
+				request.addEventListener(
+					'error',
+					err =>
+					{
+						reject( err );
 					}
 				);
 			}
@@ -107,31 +130,44 @@ const cacheHandler = {
 		return new Promise(
 			(resolve, reject) =>
 			{
-				getDB
-				.then(
-					DB =>
+				const transaction = cacheHandler.DB.transaction([storeName], "readwrite");
+				const store = transaction.objectStore(storeName);
+				const request = store.get(key);
+				request.addEventListener(
+					'success',
+					() =>
 					{
-						const transaction = DB.transaction([storeName], "readwrite");
-						const store = transaction.objectStore(storeName);
-						const request = store.get(key);
-						request.addEventListener(
-							'success',
-							() =>
-							{
-								resolve( request.result );
-							}
-						);
-						request.addEventListener(
-							'error',
-							err =>
-							{
-								reject( err );
-							}
-						);
+						resolve( request.result );
 					}
-				)
+				);
+				request.addEventListener(
+					'error',
+					err =>
+					{
+						reject( err );
+					}
+				);
 			}
 		);
+	},
+
+	initLinksSave ()
+	{
+		cacheHandler.interval = setInterval(
+			() => cacheHandler.saveLinks(),
+			1000 * 60 * 5
+		);
+		window.addEventListener(
+			'beforeunload',
+			() => cacheHandler.saveLinks()
+		);
+	},
+
+	saveLinks ()
+	{
+		const transaction = cacheHandler.DB.transaction([storeName], "readwrite");
+		const store = transaction.objectStore(storeName);
+		const request = store.put(cacheHandler.links, 'list');
 	}
 }
 cacheHandler.init();
@@ -3024,7 +3060,7 @@ L.TileLayer = L.Class.extend({
 			.then(
 				() =>
 				{
-					if (!cacheHandler.links[link])
+					if (cacheHandler.links[link])
 					{
 						cacheHandler.get(link)
 						.then(
