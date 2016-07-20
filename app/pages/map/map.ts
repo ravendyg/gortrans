@@ -240,7 +240,7 @@ window['mm'] = this._map;
         markers[key].map(
           (e =>
           {
-            var azimuth = Math.floor( (Math.abs(e.azimuth-22.5)) / 45 )*45;
+            var azimuth = Math.floor( (Math.abs(e.azimuth+22.5)) / 45 )*45;
             const icon =
               this._icons[`${key.split('-')[0]}-${azimuth}`]
 
