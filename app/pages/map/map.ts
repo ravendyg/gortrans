@@ -252,12 +252,11 @@ window['mm'] = _map;
             const marker = _L
               .marker({lat: e.lat, lng: e.lng}, {icon})
               .bindLabel(e.title, { noHide: true })
-              // .addTo(_map)
               .hideLabel()
               ;
-// window['mr'] = marker;
             marker.addTo(_map);
             setTimeout(
+              // otherwise they start at some random places?
               () => { marker.showLabel(); },
               100
             );

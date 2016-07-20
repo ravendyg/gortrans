@@ -127,17 +127,32 @@ class TransportService implements OnInit {
     this._gortransService.getMarkers(routes,
       ((buses: busData []) =>
       {
-        // if (buses.length === 0) { return; }
-        // type + '-' + route
-        const separatedBuses = buses.reduce(
-          (pv, cv) =>
-          {
-            pv[cv.idTypetr + '-' + cv.route] = pv[cv.idTypetr + '-' + cv.route] || [];
-            pv[cv.idTypetr + '-' + cv.route].push(cv);
-            return pv;
-          },
-          {}
-        );
+        const filteredBuses =
+          buses.filter(
+            (e, i, arr) =>
+            {
+              if (i === 0) { return true; }
+              if (
+                e.title === arr[i-1].title &&
+                e.route === arr[i-1].route &&
+                e.graph === arr[i-1].graph
+              )
+              {
+                return false;
+              }
+              return true;
+            }
+          );
+        const separatedBuses =
+          filteredBuses.reduce(
+            (pv, cv) =>
+            {
+              pv[cv.idTypetr + '-' + cv.route] = pv[cv.idTypetr + '-' + cv.route] || [];
+              pv[cv.idTypetr + '-' + cv.route].push(cv);
+              return pv;
+            },
+            {}
+          );
 
         for (var key in this._markerSubs)
         {
