@@ -27,6 +27,11 @@ interface iMap
 interface iLayer
 {
 	addTo: (iMap) => this;
+	bindLabel: (text: string, options: labelOptions) => this;
+	updateLabelContent: () => this;
+	showLabel: () => this;
+	hideLabel: () => this;
+	bindTooltip: (text: string, options: labelOptions) => this;
 }
 
 interface iMarker extends iLayer
@@ -77,6 +82,11 @@ interface markerOptions
 	clickable?: boolean
 }
 
+interface labelOptions
+{
+	noHide?: boolean;
+}
+
 interface iIcon
 {
 
@@ -88,6 +98,7 @@ declare type iconOptions =
 	iconRetinaUrl?: string,
 	iconSize?: Point,
 	iconAnchor?: Point,
+	labelAnchor?: Point,
 	shadowUrl?: string,
 	shadowRetinaUrl?: string,
 	shadowSize?: Point,

@@ -2,16 +2,21 @@ import {Component, OnInit, AfterViewChecked, ChangeDetectorRef} from '@angular/c
 import { Observable } from 'rxjs/Observable';
 import {TransportService} from '../../services/transport-service';
 
+var _L: iL;
+var _map: iMap;
+
+var _buses: {id: string, marker: any} [];
+var _icons: {[id: string]: iIcon};
+
 @Component({
   templateUrl: 'build/pages/map/map.html'
 })
 export class MapPage implements OnInit, AfterViewChecked
 {
-  private _L: iL;
-  private _map: iMap;
+
   private _trackMapSize: boolean;
   private _actualRouteLines: actualRoute;
-  private _buses: {id: string, marker: any} [];
+  private
   private _swipeouts: any [];
   private _stopsHidden: boolean;
 
@@ -19,7 +24,6 @@ export class MapPage implements OnInit, AfterViewChecked
   private _stopRadius: number;
   private _routeColors: string [];
   private _typeToNames: {[id: string]: string};
-  private _icons: {[id: string]: iIcon};
 
   public busIcons: busIcon [];
 
@@ -30,7 +34,7 @@ export class MapPage implements OnInit, AfterViewChecked
 
     this._stopRadius = 15;
 
-    this._buses = [];
+    _buses = [];
 
     this.busIcons = [];
 window['we'] = this;
@@ -46,37 +50,37 @@ window['we'] = this;
       '8': 'minibus'
     };
 
-    this._icons = {};
+    _icons = {};
   }
 
   public ngOnInit (): void
   {
     // map intialization
-    this._L = window['L'];
-    const southWest = this._L.latLng(30, 10),
-          northEast = this._L.latLng(80, 200),
-          bounds = this._L.latLngBounds(southWest, northEast);
+    _L = window['L'];
+    const southWest = _L.latLng(30, 10),
+          northEast = _L.latLng(80, 200),
+          bounds = _L.latLngBounds(southWest, northEast);
     const startCoords = {lat: 54.908593335436926, lng: 83.0291748046875};
     const startZoom = 11;
     this._stopsHidden = true;
 
-    this._map = this._L.map('map', {
+    _map = _L.map('map', {
         minZoom: 4,
         maxBounds: bounds
     }).setView(startCoords, startZoom);
-window['mm'] = this._map;
-    this._L.tileLayer.provider('OpenStreetMap.HOT').addTo(this._map);
+window['mm'] = _map;
+    _L.tileLayer.provider('OpenStreetMap.HOT').addTo(_map);
 
     document.querySelector('.leaflet-control-zoom').remove();
     document.querySelector('.leaflet-control-attribution').remove();
 
     // track zoom change and hide stops on big scale
-    this._map.on(
+    _map.on(
       'zoomend',
       ((e: Event) =>
       {
         var i: number;
-        if (this._map.getZoom() >= 13)
+        if (_map.getZoom() >= 13)
         { // show
           if (this._stopsHidden)
           {
@@ -105,7 +109,7 @@ window['mm'] = this._map;
     );
 
     // prepare icons
-    this._icons['stop'] =  this._L.icon({
+    _icons['stop'] =  _L.icon({
       iconUrl: `build/img/bus-stop.png`,
       iconSize: [46, 42],
       className: 'bus-stop-marker'
@@ -115,10 +119,12 @@ window['mm'] = this._map;
     {
       for (var angle = 0; angle < 360; angle += 45)
       {
-        this._icons[`${keyType}-${angle}`] =
-          this._L.icon({
+        _icons[`${keyType}-${angle}`] =
+          _L.icon({
             iconUrl: `build/img/transport/${this._typeToNames[keyType]}-${angle}.png`,
             iconSize: [46, 42],
+            // iconAnchor: [10,10],
+            // labelAnchor: [2,0]
           });
       }
     }
@@ -130,17 +136,17 @@ window['mm'] = this._map;
   public ngAfterViewChecked (): void
   {
     // track when map container has been initialized
-    if (this._map._container.offsetWidth !== 0 && this._trackMapSize)
+    if (_map._container.offsetWidth !== 0 && this._trackMapSize)
     {
       // map ready
       this._trackMapSize = false;
-      this._map.invalidateSize();
+      _map.invalidateSize();
     }
   }
 
   public zoomToRoute (id: string)
   {
-    this._map.fitBounds(
+    _map.fitBounds(
       this._actualRouteLines[id].route.getBounds()
     );
   }
@@ -229,8 +235,8 @@ window['mm'] = this._map;
 
   private _processBusMarkers ( markers: {[id: string]: busData []} )
   {
-    this._buses.map(
-      ( e => this._map.removeLayer(e.marker) ).bind(this)
+    _buses.map(
+      ( e => _map.removeLayer(e.marker) ).bind(this)
     );
 
     for (var key in markers)
@@ -238,24 +244,30 @@ window['mm'] = this._map;
       if ( this._actualRouteLines[key] )
       { // haven't yet removed corresponding line
         markers[key].map(
-          (e =>
+          e =>
           {
-            var azimuth = Math.floor( (Math.abs(e.azimuth+22.5)) / 45 )*45;
-            const icon =
-              this._icons[`${key.split('-')[0]}-${azimuth}`]
+            var azimuth = Math.floor( (Math.abs(e.azimuth+22.5)) / 45 )*45 % 360;
+            const icon = _icons[`${key.split('-')[0]}-${azimuth}`]
 
-            const marker = this._L
+            const marker = _L
               .marker({lat: e.lat, lng: e.lng}, {icon})
-              .bindPopup(e.title)
-              .addTo(this._map)
+              .bindLabel(e.title, { noHide: true })
+              // .addTo(_map)
+              .hideLabel()
               ;
+// window['mr'] = marker;
+            marker.addTo(_map);
+            setTimeout(
+              () => { marker.showLabel(); },
+              100
+            );
 
-            this._buses.push({
+            _buses.push({
               id: key,
               marker
             });
 
-          }).bind(this)
+          }
         );
       }
     }
@@ -279,9 +291,9 @@ window['mm'] = this._map;
     {
       // remove route stops from the map
       this._actualRouteLines[id].stops
-        .forEach( e => this._map.removeLayer(e.marker) );
+        .forEach( e => _map.removeLayer(e.marker) );
       // remove route from the map
-      this._map.removeLayer(this._actualRouteLines[id].route);
+      _map.removeLayer(this._actualRouteLines[id].route);
       // free color
       this._routeColors.push(this._actualRouteLines[id].color);
       // from route memory
@@ -291,14 +303,14 @@ window['mm'] = this._map;
     }
 
     // remove buses from the map
-    this._buses.forEach(
+    _buses.forEach(
       e =>
       {
-        if (e.id === id) { this._map.removeLayer(e.marker); }
+        if (e.id === id) { _map.removeLayer(e.marker); }
       }
     );
     // remove buses from memory
-    this._buses = this._buses.filter( e => e.id !== id );
+    _buses = _buses.filter( e => e.id !== id );
 
     // remove from service
     this._transportService.removeLine(id);
@@ -317,17 +329,17 @@ window['mm'] = this._map;
       ;
     this._actualRouteLines[id] =
     {
-      route: this._L.polyline(
+      route: _L.polyline(
                 trass,
                 {
                   color,
                   className: 'route-line'
                 }
-              ).addTo(this._map),
+              ).addTo(_map),
       stops,
       color
     };
-    this._map.fitBounds(this._actualRouteLines[id].route.getBounds());
+    _map.fitBounds(this._actualRouteLines[id].route.getBounds());
 
     var [type, name] = id.split('-');
     name = name.replace(/^0*/, '');
@@ -344,10 +356,10 @@ window['mm'] = this._map;
     // not pure !!!
     function _createStopMarker (e)
     {
-      const marker = this._L
-        .marker({lat: e.lat, lng: e.lng}, {icon: this._icons['stop']})
+      const marker = _L
+        .marker({lat: e.lat, lng: e.lng}, {icon: _icons['stop']})
         .bindPopup(e.n)
-        .addTo(this._map)
+        .addTo(_map)
         ;
       const out =
       {
