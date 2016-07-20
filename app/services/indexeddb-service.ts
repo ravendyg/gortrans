@@ -152,7 +152,11 @@ function loadRoutesFromDB (): Promise<routesListResponse []>
 		const request = store.get('all');
 		request.addEventListener(
 			'success',
-			() => resolve( request.result )
+			() => resolve( request.result || [] )
+		);
+		request.addEventListener(
+			'error',
+			() => resolve( [] )
 		);
 	}
 	return new Promise( main );
