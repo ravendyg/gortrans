@@ -80,7 +80,7 @@ window['mm'] = _map;
       ((e: Event) =>
       {
         var i: number;
-        if (_map.getZoom() >= 13)
+        if (_map.getZoom() >= 14)
         { // show
           if (this._stopsHidden)
           {
@@ -92,7 +92,7 @@ window['mm'] = _map;
         { // hide
           if (!this._stopsHidden)
           {
-            this._changeCSSRule('.bus-stop-marker', " { display: none !important; }");
+            this._changeCSSRule('.bus-stop-marker', " { visibility: hidden !important; }");
             this._stopsHidden = true;
           }
         }
@@ -258,7 +258,7 @@ window['mm'] = _map;
             setTimeout(
               // otherwise they start at some random places?
               () => { marker.showLabel(); },
-              100
+              300
             );
 
             _buses.push({
