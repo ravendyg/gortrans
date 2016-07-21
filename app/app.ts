@@ -94,9 +94,9 @@ class MyApp implements OnInit {
     }
   }
 
-  public selectRoute (type: number, route: string): void
+  public selectRoute (type: number, route: string, name: string): void
   {
-    this._transportService.selectRoute(type, route);
+    this._transportService.selectRoute(type, route, name);
     this.menu.getMenus()[0].close();
   }
 

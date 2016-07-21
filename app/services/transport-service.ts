@@ -12,7 +12,7 @@ export /**
 class TransportService implements OnInit {
 
   private _linesLimit: number;
-	private _routeLinesOnMap: { id: string, trass: any } [];
+	private _routeLinesOnMap: { id: string, name: string, trass: any } [];
 
   private _addLineOnMapSubId: number;
   private _addLineOnMapSubs: any;
@@ -40,12 +40,12 @@ class TransportService implements OnInit {
 	{
 	}
 
-  public selectRoute (type: number, route: string): void
+  public selectRoute (type: number, route: string, name: string): void
   {
-    this._gortransService.getRouteLine(route, type, this._getRouteLinesCallback.bind(this) )
+    this._gortransService.getRouteLine(route, type, name, this._getRouteLinesCallback.bind(this) )
   }
 
-  private _getRouteLinesCallback (id: string, trass: trassPoint []): void
+  private _getRouteLinesCallback (id: string, name: string, trass: trassPoint []): void
   {
     var instead: string = null;
     // check whether it's realy new line
@@ -58,7 +58,7 @@ class TransportService implements OnInit {
     if (lineIsNew && this._routeLinesOnMap.length < this._linesLimit)
     {
       this._routeLinesOnMap = this._routeLinesOnMap
-        .concat( { id, trass } )
+        .concat( { id, name, trass } )
         ;
     }
     else if (lineIsNew)
@@ -66,14 +66,14 @@ class TransportService implements OnInit {
       instead = this._routeLinesOnMap[0].id;
       this._routeLinesOnMap = this._routeLinesOnMap
         .slice(1)
-        .concat( { id, trass } )
+        .concat( { id, name, trass } )
         ;
     }
 
     // call subscribers
     if (lineIsNew)
     {
-      this._runLinesOnMapChangeSubs(id, trass, instead);
+      this._runLinesOnMapChangeSubs(id, name, trass, instead);
       this._startWatchingBuses();
     }
   }
@@ -110,11 +110,11 @@ class TransportService implements OnInit {
    * @trass - new line points
    * @instead - id of the line that was replaced (null if non)
    */
-  private _runLinesOnMapChangeSubs (id: string, trass: trassPoint [], instead: string): void
+  private _runLinesOnMapChangeSubs (id: string, name: string, trass: trassPoint [], instead: string): void
   {
     for (var key in this._addLineOnMapSubs)
     {
-      this._addLineOnMapSubs[key](id, trass, instead);
+      this._addLineOnMapSubs[key](id, name, trass, instead);
     }
   }
 

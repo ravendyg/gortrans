@@ -74,13 +74,14 @@ class GortransApiService implements OnInit{
 	public getRouteLine (
 		route: string,
 		type: number,
-		cb: (id: string, route: trassPoint []) => any
+		name: string,
+		cb: (id: string, name: string, route: trassPoint []) => any
 	): void
 	{
 		const id = type + '-' + route;
 		if (this._lines[id])
 		{	// already fetched
-			cb( id, this._lines[id]);
+			cb( id, name, this._lines[id]);
 		}
 		else
 		{
@@ -89,7 +90,7 @@ class GortransApiService implements OnInit{
 				((trass: trassPoint []) =>
 				{
 					this._lines[id] = trass;
-					cb( id, trass);
+					cb( id, name, trass);
 				}).bind(this)
 			);
 		}

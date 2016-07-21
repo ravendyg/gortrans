@@ -272,13 +272,13 @@ window['mm'] = _map;
     }
   }
 
-  private _newLineOnMapCb (id: string, trass: trassPoint [], instead: string): void
+  private _newLineOnMapCb (id: string, name: string, trass: trassPoint [], instead: string): void
   {
     if (instead)
     {
       this._removeRouteOnMap(instead);
     }
-    this._addRouteOnMap(id, trass);
+    this._addRouteOnMap(id, name, trass);
   }
 
   /**
@@ -318,7 +318,7 @@ window['mm'] = _map;
   /**
    * create route polyline and display it on the map
    */
-  private _addRouteOnMap (id: string, trass: trassPoint []): void
+  private _addRouteOnMap (id: string, name: string, trass: trassPoint []): void
   {
     const color = this._routeColors.pop();
 
@@ -340,8 +340,8 @@ window['mm'] = _map;
     };
     _map.fitBounds(this._actualRouteLines[id].route.getBounds());
 
-    var [type, name] = id.split('-');
-    name = name.replace(/^0*/, '');
+    var type = id.split('-')[0];
+    // name = name.replace(/^0*/, '');
 
     const img = `build/img/${this._typeToNames[type]}.png`;
 
