@@ -8,6 +8,8 @@ var _map: iMap;
 var _buses: {id: string, marker: any} [];
 var _icons: {[id: string]: iIcon};
 
+var _labelsShown = false;
+
 @Component({
   templateUrl: 'build/pages/map/map.html'
 })
@@ -84,7 +86,7 @@ window['mm'] = _map;
         { // show
           if (this._stopsHidden)
           {
-            this._changeCSSRule('.bus-stop-marker', " {}");
+            _changeCSSRule('.bus-stop-marker', " {}");
             this._stopsHidden = false;
           }
         }
@@ -92,7 +94,7 @@ window['mm'] = _map;
         { // hide
           if (!this._stopsHidden)
           {
-            this._changeCSSRule('.bus-stop-marker', " { visibility: hidden !important; }");
+            _changeCSSRule('.bus-stop-marker', " { visibility: hidden !important; }");
             this._stopsHidden = true;
           }
         }
@@ -149,29 +151,6 @@ window['mm'] = _map;
     _map.fitBounds(
       this._actualRouteLines[id].route.getBounds()
     );
-  }
-
-  private _changeCSSRule (selector: string, newRule: string): void
-  {
-    const cssFiles = document.styleSheets;
-    var keyCss, countCss;
-    for (keyCss = 0; keyCss < cssFiles.length; keyCss++)
-    {
-      if (cssFiles[keyCss].href.match('app.md.css'))
-      {
-        const rules = (<CSSStyleSheet>cssFiles[keyCss]).cssRules
-        for (countCss = 0; countCss < rules.length; countCss++)
-        {
-          if ((<CSSStyleRule>rules[countCss]).selectorText === selector)
-          {
-            (<CSSStyleSheet>cssFiles[keyCss]).deleteRule(countCss);
-            (<CSSStyleSheet>cssFiles[keyCss]).insertRule(selector + newRule, 0);
-            break;
-          }
-        }
-        break;
-      }
-    }
   }
 
   private _initSwipeout(e: TouchEvent): void
@@ -239,6 +218,8 @@ window['mm'] = _map;
       ( e => _map.removeLayer(e.marker) ).bind(this)
     );
 
+    _hideLabels();
+
     for (var key in markers)
     {
       if ( this._actualRouteLines[key] )
@@ -257,7 +238,10 @@ window['mm'] = _map;
             marker.addTo(_map);
             setTimeout(
               // otherwise they start at some random places?
-              () => { marker.showLabel(); },
+              () => {
+                marker.showLabel();
+                _showLabels();
+              },
               300
             );
 
@@ -368,7 +352,42 @@ window['mm'] = _map;
       return out;
     }
   }
+}
+
+function _changeCSSRule (selector: string, newRule: string): void
+  {
+    const cssFiles = document.styleSheets;
+    var keyCss, countCss;
+    for (keyCss = 0; keyCss < cssFiles.length; keyCss++)
+    {
+      if (cssFiles[keyCss].href.match('app.md.css'))
+      {
+        const rules = (<CSSStyleSheet>cssFiles[keyCss]).cssRules
+        for (countCss = 0; countCss < rules.length; countCss++)
+        {
+          if ((<CSSStyleRule>rules[countCss]).selectorText === selector)
+          {
+            (<CSSStyleSheet>cssFiles[keyCss]).deleteRule(countCss);
+            (<CSSStyleSheet>cssFiles[keyCss]).insertRule(selector + newRule, 0);
+            break;
+          }
+        }
+        break;
+      }
+    }
+  }
 
 
 
+
+function _hideLabels ()
+{
+  _changeCSSRule('.leaflet-label', " { visibility: hidden !important; }");
+  _labelsShown = true;
+}
+
+function _showLabels ()
+{
+  _changeCSSRule('.leaflet-label', " {}");
+  _labelsShown = true;
 }

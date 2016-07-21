@@ -113,5 +113,9 @@ $colors: (
 
 .bus-stop-marker
 {
-  display: none !important;
+  visibility: none !important;
+}
+.leaflet-label
+{
+  visibility: none !important;
 }
