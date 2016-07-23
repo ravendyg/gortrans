@@ -2,6 +2,8 @@
 {
 	'use strict';
 
+	var blobLifeExpectancy = 1000 * 60 * 60 * 24 * 30;	// 30 days
+
 	var dbName = 'gortransLeaflet';
 	var storeName = 'map';
 
@@ -55,6 +57,7 @@
 	{
 		c: null,
 		links: null,
+		blobs: {},
 		DB: null,
 		interval: -1,
 		/** open DB */
@@ -101,9 +104,11 @@
 			return new Promise(
 				(resolve, reject) =>
 				{
+
+					// first put in db
 					const transaction = cacheHandler.DB.transaction([storeName], "readwrite");
 					const store = transaction.objectStore(storeName);
-					const request = store.put(data, key);
+					const request = store.put( { data, timestamp: Date.now() }, key);
 					request.addEventListener(
 						'success',
 						() =>
@@ -119,6 +124,8 @@
 							reject( err );
 						}
 					);
+					// then in memory
+					cacheHandler.blobs[key] = data;
 				}
 			);
 		},
@@ -127,24 +134,48 @@
 		{
 			return new Promise(
 				(resolve, reject) =>
-				{
-					const transaction = cacheHandler.DB.transaction([storeName], "readwrite");
-					const store = transaction.objectStore(storeName);
-					const request = store.get(key);
-					request.addEventListener(
-						'success',
-						() =>
-						{
-							resolve( request.result );
-						}
-					);
-					request.addEventListener(
-						'error',
-						err =>
-						{
-							reject( err );
-						}
-					);
+				{	// check memory first
+					if ( cacheHandler.blobs[key] )
+					{
+						resolve( cacheHandler.blobs[key] );
+					}
+					else
+					{
+						// then db
+						const transaction = cacheHandler.DB.transaction([storeName], "readwrite");
+						const store = transaction.objectStore(storeName);
+						const request = store.get(key);
+						request.addEventListener(
+							'success',
+							() =>
+							{
+								if ( request.result && request.result.data )
+								{// return data
+									resolve( request.result.data );
+								}
+								else
+								{
+									reject();
+								}
+								// then check is it up to date
+								if (
+									!request.result ||
+									!request.result.data ||
+									request.result.timestamp + blobLifeExpectancy < Date.now()
+								)
+								{	// doesn't exist or to old, try to replace
+									cacheHandler._http(key);
+								}
+							}
+						);
+						request.addEventListener(
+							'error',
+							err =>
+							{
+								reject( err );
+							}
+						);
+					}
 				}
 			);
 		},
@@ -169,31 +200,63 @@
 										);
 									}
 								)
+								.catch(
+									err =>
+									{	// don't expect normally be here
+										// reload
+										cacheHandler._http(link)
+										.then(
+											blob =>
+											{
+												resolve(
+													urlCreator.createObjectURL( blob )
+												);
+											}
+										);
+									}
+								)
+								;
 							}
 							else
 							{
-								var xhr = new XMLHttpRequest();
-								xhr.open( "GET", link, true );
-
-								xhr.responseType = "arraybuffer";
-
-								xhr.onload = function( e ) {
-									var blob = new Blob( [ this.response ], { type: "image/png" } );
-									cacheHandler.put(link, blob);
-
-									resolve(
-										urlCreator.createObjectURL( blob )
-									);
-								};
-
-								xhr.onerror = function (e) {
-									console.error(e);
-								}
-
-								xhr.send();
+								cacheHandler._http(link)
+								.then(
+									blob =>
+									{
+										resolve(
+											urlCreator.createObjectURL( blob )
+										);
+									}
+								);
 							}
 						}
 					);
+				}
+			);
+		},
+
+		_http (link)
+		{
+			return new Promise(
+				(resolve, reject) =>
+				{
+					var xhr = new XMLHttpRequest();
+					xhr.open( "GET", link, true );
+
+					xhr.responseType = "arraybuffer";
+
+					xhr.onload = function( e ) {
+						var blob = new Blob( [ this.response ], { type: "image/png" } );
+						cacheHandler.put(link, blob);
+
+						resolve(blob);
+					};
+
+					xhr.onerror = function (e) {
+						console.error(e);
+					}
+
+					xhr.send();
 				}
 			);
 		},
