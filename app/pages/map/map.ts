@@ -1,6 +1,10 @@
 import {Component, OnInit, AfterViewChecked, ChangeDetectorRef} from '@angular/core';
+import {Modal, Page, NavController, ViewController} from 'ionic-angular'
+
 import { Observable } from 'rxjs/Observable';
 import {TransportService} from '../../services/transport-service';
+
+// import {StopModal} from '../stop-modal/stop-modal';
 
 var _L: iL;
 var _map: iMap;
@@ -10,6 +14,20 @@ var _icons: {[id: string]: iIcon};
 
 var _labelsShown = false;
 
+
+@Component({
+  templateUrl: 'build/pages/stop-modal/stop-modal.html'
+})
+class StopModal
+{
+  constructor ( private viewCtrl: ViewController) {}
+
+  close ()
+	{
+    this.viewCtrl.dismiss();
+  }
+}
+
 @Component({
   templateUrl: 'build/pages/map/map.html'
 })
@@ -18,7 +36,6 @@ export class MapPage implements OnInit, AfterViewChecked
 
   private _trackMapSize: boolean;
   private _actualRouteLines: actualRoute;
-  private
   private _swipeouts: any [];
   private _stopsHidden: boolean;
 
@@ -29,7 +46,13 @@ export class MapPage implements OnInit, AfterViewChecked
 
   public busIcons: busIcon [];
 
-  constructor(private _transportService: TransportService, private _ref: ChangeDetectorRef)
+  public timeToNextUpdateMessage: string;
+
+  constructor(
+    private _transportService: TransportService,
+    private _navController: NavController
+    // private _ref: ChangeDetectorRef
+  )
   {
     this._trackMapSize = true;
     this._actualRouteLines = {};
@@ -39,7 +62,7 @@ export class MapPage implements OnInit, AfterViewChecked
     _buses = [];
 
     this.busIcons = [];
-window['we'] = this;
+
     this._routeColors = ['blue', 'green', 'red'];
 
     this._swipeouts = [];
@@ -51,6 +74,8 @@ window['we'] = this;
       '3': 'tram',
       '8': 'minibus'
     };
+
+    this.timeToNextUpdateMessage = '';
 
     _icons = {};
   }
@@ -82,7 +107,7 @@ window['mm'] = _map;
       ((e: Event) =>
       {
         var i: number;
-        if (_map.getZoom() >= 14)
+        if (_map.getZoom() >= 13)
         { // show
           if (this._stopsHidden)
           {
@@ -106,8 +131,21 @@ window['mm'] = _map;
       this._newLineOnMapCb.bind(this)
     );
 
+    // subscribe for bus positions update
     this._transportService.subscribeForMarkers(
       this._processBusMarkers.bind(this)
+    );
+
+    // subscribe for next update time left time change
+    this._transportService.subscribeForNextUpdateTimeChange(
+      (message: string) =>
+      {
+        if (message.length > 0 && message.length < 3)
+        { // number
+          message = 'До обновления: ' + message;
+        }
+        this.timeToNextUpdateMessage = message;
+      }
     );
 
     // prepare icons
@@ -124,15 +162,26 @@ window['mm'] = _map;
         _icons[`${keyType}-${angle}`] =
           _L.icon({
             iconUrl: `build/img/transport/${this._typeToNames[keyType]}-${angle}.png`,
-            iconSize: [46, 42],
-            // iconAnchor: [10,10],
-            // labelAnchor: [2,0]
+            iconSize: [46, 42]
           });
       }
     }
 
     // icon menu manipulation
     document.addEventListener('touchstart', this._initSwipeout.bind(this));
+  }
+
+  public showStopModal (ev: MouseEvent)
+  {
+    const elem = <HTMLDivElement>ev.target;
+    if (elem.dataset && elem.dataset['type'] === 'stop')
+    {
+      let _stopModal = Modal.create(StopModal);
+      this._navController.present( _stopModal );
+      // setTimeout(
+      //   () => this._ref.detectChanges()
+      // );
+    }
   }
 
   public ngAfterViewChecked (): void
@@ -151,6 +200,12 @@ window['mm'] = _map;
     _map.fitBounds(
       this._actualRouteLines[id].route.getBounds()
     );
+  }
+
+  /** force buses on map positions update */
+  public updateBusPositions ()
+  {
+    this._transportService.refreshPositions();
   }
 
   private _initSwipeout(e: TouchEvent): void
@@ -240,9 +295,8 @@ window['mm'] = _map;
               // otherwise they start at some random places?
               () => {
                 marker.showLabel();
-                _showLabels();
               },
-              300
+              1000
             );
 
             _buses.push({
@@ -251,6 +305,14 @@ window['mm'] = _map;
             });
 
           }
+        );
+
+        setTimeout(
+          // otherwise they start at some random places?
+          () => {
+            _showLabels();
+          },
+          1000
         );
       }
     }
@@ -332,18 +394,27 @@ window['mm'] = _map;
     this.busIcons.push( { id, color, img, name } );
     // doesn't want to propagate changes into view without this hack
     // NgZone didn't work either
-    setTimeout(
-      () => this._ref.detectChanges()
-    );
+    // setTimeout(
+    //   () => this._ref.detectChanges()
+    // );
 
     // not pure !!!
     function _createStopMarker (e)
     {
       const marker = _L
         .marker({lat: e.lat, lng: e.lng}, {icon: _icons['stop']})
-        .bindPopup(e.n)
+        // .bindPopup(e.n)
         .addTo(_map)
         ;
+window['mm'] = marker;
+
+      // store stop data into dataset
+      marker._icon.dataset.type = 'stop';
+      marker._icon.dataset.id   = e.id;
+      marker._icon.dataset.name = e.n;
+      marker._icon.dataset.lat  = e.lat;
+      marker._icon.dataset.lng  = e.lng;
+
       const out =
       {
         id: e.id,
@@ -353,6 +424,7 @@ window['mm'] = _map;
     }
   }
 }
+
 
 function _changeCSSRule (selector: string, newRule: string): void
   {
@@ -376,8 +448,6 @@ function _changeCSSRule (selector: string, newRule: string): void
       }
     }
   }
-
-
 
 
 function _hideLabels ()

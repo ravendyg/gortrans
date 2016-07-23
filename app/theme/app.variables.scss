@@ -119,3 +119,19 @@ $colors: (
 {
   visibility: hidden !important;
 }
+
+.modal-cmp
+{
+  z-index: 100;
+}
+
+#update-timer
+{
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: 10px;
+  background-color: rgba(20,20,20,0.5);
+  font-weight: 800;
+  color: rgba(20,20,20,1);
+}

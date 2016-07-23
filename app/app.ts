@@ -3,7 +3,10 @@ import { HTTP_PROVIDERS } from '@angular/http';
 import 'rxjs/Rx';
 import {ionicBootstrap, Platform, MenuController, Nav} from 'ionic-angular';
 import {StatusBar} from 'ionic-native';
+
 import {MapPage} from './pages/map/map';
+
+import {StopModal} from './pages/stop-modal/stop-modal';
 
 import {IndexedDbService} from './services/indexeddb-service';
 import {GortransInfoApiService} from './services/gortrans-info-api-service';
@@ -154,6 +157,7 @@ ionicBootstrap(
     GortransInfoApiService,
     GortransApiService,
     IndexedDbService,
-    TransportService
+    TransportService,
+    StopModal
   ]
 );

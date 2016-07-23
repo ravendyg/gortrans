@@ -5,6 +5,11 @@ import { Observable } from 'rxjs/Observable';
 
 import {GortransApiService} from './gortrans-api-service';
 
+var timeToBusesRefreshLeft: number;
+
+var nextUpdateTimeSubs: any = {};
+var nextUpdateTimeSubId = 1;
+
 @Injectable()
 export /**
  * TransportService
@@ -40,22 +45,37 @@ class TransportService implements OnInit {
 	{
 	}
 
-  public selectRoute (type: number, route: string, name: string): void
+  public selectRoute
+  (
+    type: number,
+    route: string,
+    name: string
+  ): void
   {
-    this._gortransService.getRouteLine(route, type, name, this._getRouteLinesCallback.bind(this) )
+    this._gortransService.getRouteLine(
+      route,
+      type,
+      name,
+      this._getRouteLinesCallback.bind(this)
+    );
   }
 
-  private _getRouteLinesCallback (id: string, name: string, trass: trassPoint []): void
+  private _getRouteLinesCallback
+  (
+    id: string,
+    name: string,
+    trass: trassPoint []
+  ): void
   {
     var instead: string = null;
     // check whether it's realy new line
     var lineIsNew: boolean =
       this._routeLinesOnMap.reduce(
-        (acc, e) => e.id === id ? false : true,
+        (acc, e) => e.id !== id,
         true
       );
     // check whether there is space for a new line, if not - FIFO
-    if (lineIsNew && this._routeLinesOnMap.length < this._linesLimit)
+    if ( lineIsNew && this._routeLinesOnMap.length < this._linesLimit )
     {
       this._routeLinesOnMap = this._routeLinesOnMap
         .concat( { id, name, trass } )
@@ -64,10 +84,11 @@ class TransportService implements OnInit {
     else if (lineIsNew)
     {
       instead = this._routeLinesOnMap[0].id;
-      this._routeLinesOnMap = this._routeLinesOnMap
-        .slice(1)
-        .concat( { id, name, trass } )
-        ;
+      this._routeLinesOnMap =
+        this._routeLinesOnMap
+          .slice(1)
+          .concat( { id, name, trass } )
+          ;
     }
 
     // call subscribers
@@ -86,13 +107,21 @@ class TransportService implements OnInit {
   public removeLine (id: string): void
   {
     this._routeLinesOnMap = this._routeLinesOnMap.filter( e => e.id !== id );
+    if ( this._routeLinesOnMap.length < 1 )
+    { // nothing to watch for
+      clearInterval( this._busWatcherId );
+      this.setNextUpdateTime('');
+    }
   }
 
   /**
    * @cb - subscribtion callback
    * @return - unsubscribe callback
    */
-  public subscribeForAddLineOnMap (cb: any): any
+  public subscribeForAddLineOnMap
+  (
+    cb: any
+  ): any
   {
     this._addLineOnMapSubs[this._addLineOnMapSubId++] = cb;
     return () => delete this._addLineOnMapSubs[this._addLineOnMapSubId - 1];
@@ -104,13 +133,46 @@ class TransportService implements OnInit {
     return () => delete this._markerSubs[this._markerSubsCounter - 1];
   }
 
+  public subscribeForNextUpdateTimeChange
+  (
+    cb: any
+  ): () => void
+  {
+    nextUpdateTimeSubs[''+nextUpdateTimeSubId] = cb;
+    nextUpdateTimeSubId++;
+    return () => { delete nextUpdateTimeSubs[''+(nextUpdateTimeSubId-1)]; }
+  }
+
+  /** change message to be passed to map view about time left until the next update */
+  public setNextUpdateTime
+  (
+    message: string
+  )
+  {
+    for (var key in nextUpdateTimeSubs)
+    {
+      nextUpdateTimeSubs[key](message);
+    }
+  }
+
+  public refreshPositions (): void
+  {
+    this._startWatchingBuses();
+  }
+
   /**
    * call subscribed callbacks
    * @id - new line id
    * @trass - new line points
    * @instead - id of the line that was replaced (null if non)
    */
-  private _runLinesOnMapChangeSubs (id: string, name: string, trass: trassPoint [], instead: string): void
+  private _runLinesOnMapChangeSubs
+  (
+    id: string,
+    name: string,
+    trass: trassPoint [],
+    instead: string
+  ): void
   {
     for (var key in this._addLineOnMapSubs)
     {
@@ -118,47 +180,62 @@ class TransportService implements OnInit {
     }
   }
 
-  private _getMarkers ()
+  private _getMarkers (): Promise<any>
   {
-    if (this._routeLinesOnMap.length === 0) { return; }
-
-    const routes = this._routeLinesOnMap.map( e => e.id );
-
-    this._gortransService.getMarkers(routes,
-      ((buses: busData []) =>
+    return new Promise(
+      (resolve, reject) =>
       {
-        const filteredBuses =
-          buses.filter(
-            (e, i, arr) =>
-            {
-              if (i === 0) { return true; }
-              if (
-                e.title === arr[i-1].title &&
-                e.route === arr[i-1].route &&
-                e.graph === arr[i-1].graph
-              )
-              {
-                return false;
-              }
-              return true;
-            }
-          );
-        const separatedBuses =
-          filteredBuses.reduce(
-            (pv, cv) =>
-            {
-              pv[cv.idTypetr + '-' + cv.route] = pv[cv.idTypetr + '-' + cv.route] || [];
-              pv[cv.idTypetr + '-' + cv.route].push(cv);
-              return pv;
-            },
-            {}
-          );
-
-        for (var key in this._markerSubs)
+        if (this._routeLinesOnMap.length === 0)
         {
-          this._markerSubs[key](separatedBuses);
+          reject();
+          return;
         }
-      }).bind(this)
+
+
+        this.setNextUpdateTime('Обновляю ...');
+
+        const routes = this._routeLinesOnMap.map( e => e.id );
+
+        this._gortransService.getMarkers(routes,
+          ((buses: busData []) =>
+          {
+            const filteredBuses =
+              buses.filter(
+                (e, i, arr) =>
+                {
+                  if (i === 0) { return true; }
+                  if (
+                    e.title === arr[i-1].title &&
+                    e.route === arr[i-1].route &&
+                    e.graph === arr[i-1].graph
+                  )
+                  {
+                    return false;
+                  }
+                  return true;
+                }
+              );
+            const separatedBuses =
+              filteredBuses.reduce(
+                (pv, cv) =>
+                {
+                  pv[cv.idTypetr + '-' + cv.route] = pv[cv.idTypetr + '-' + cv.route] || [];
+                  pv[cv.idTypetr + '-' + cv.route].push(cv);
+                  return pv;
+                },
+                {}
+              );
+
+            for (var key in this._markerSubs)
+            {
+              this._markerSubs[key](separatedBuses);
+            }
+
+            resolve(true);
+
+          }).bind(this)
+        );
+      }
     );
   }
 
@@ -166,16 +243,51 @@ class TransportService implements OnInit {
   {
     this._stopWatchingBuses();
 
-    this._getMarkers();
+    // request updated data
+    timeToBusesRefreshLeft = 40;
+    var refreshed = false;
 
-    this._busWatcherId = setInterval(
-      this._getMarkers.bind(this),
-      1000 * 40 // every 40 sec
-    )
+    this._getMarkers()
+    .then(
+      () =>
+      {
+        refreshed = true;
+      }
+    );
+
+    this._busWatcherId =
+      setInterval(
+        () =>
+        {
+          timeToBusesRefreshLeft--;
+
+          if (refreshed)
+          { // while refreshing show "обновляю"
+            // when done, show time left
+            this.setNextUpdateTime(''+timeToBusesRefreshLeft);
+          }
+
+          if (timeToBusesRefreshLeft === 0)
+          { // time to refresh
+            timeToBusesRefreshLeft = 40;
+            refreshed = false;
+
+            this._getMarkers()
+            .then(
+              () =>
+              {
+                refreshed = true;
+              }
+            );
+          }
+        },
+        1000 // every 1 sec
+      );
   }
 
   private _stopWatchingBuses ()
   {
+    this.setNextUpdateTime('');
     clearInterval(this._busWatcherId);
   }
 

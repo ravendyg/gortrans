@@ -17,7 +17,19 @@
     </button>
   </ion-buttons>
 
-  <div id="map"></div>
+  <div
+    id="map"
+    (click)="showStopModal($event)"
+  >
+  </div>
+
+  <div
+    id="update-timer"
+    [hidden]="!timeToNextUpdateMessage"
+    (click)="updateBusPositions()"
+  >
+    {{timeToNextUpdateMessage}}
+  </div>
 
 
 </ion-content>

@@ -36,6 +36,7 @@ interface iLayer
 
 interface iMarker extends iLayer
 {
+	_icon: { dataset: any };
 	bindPopup: (content: string) => this;
 	openPopup: () => this;
 }
@@ -170,4 +171,12 @@ interface interactionOptions
 interface keyboardNavigationOptions
 {
 
+}
+
+interface leafletEvent extends Event
+{
+	originalEvent:
+	{
+		target: HTMLElement
+	}
 }

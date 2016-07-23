@@ -32,43 +32,37 @@ class GortransApiService implements OnInit{
 
 	public getRoutes (cb: any): void
 	{
-		if (this._routes)
-		{
-			cb(this._routes);
-		}
-		else
-		{
-			this._indexedDbService.getRoutes(
-        (routes: routesListResponse [] ) =>
+		this._indexedDbService.getRoutes(
+			(routes: routesListResponse [] ) =>
+			{
+				var _routes = {
+					buses: [],
+					smallBuses: [],
+					trams: [],
+					trolleys: []
+				};
+				// transform raw .ru response into more convenient form of routesType
+				for (var i = 0; i < routes.length; i++)
 				{
-					this._routes = {
-						buses: [],
-						smallBuses: [],
-						trams: [],
-						trolleys: []
-					};
-					for (var i = 0; i < routes.length; i++)
-					{
-						switch (routes[i].type) {
-							case 0:
-								this._routes.buses = routes[i].ways;
-							break;
-							case 1:
-								this._routes.trolleys = routes[i].ways;
-							break;
-							case 2:
-								this._routes.trams = routes[i].ways;
-							break;
-							case 7:
-								this._routes.smallBuses = routes[i].ways;
-							break;
-						}
+					switch (routes[i].type) {
+						case 0:
+							_routes.buses = routes[i].ways;
+						break;
+						case 1:
+							_routes.trolleys = routes[i].ways;
+						break;
+						case 2:
+							_routes.trams = routes[i].ways;
+						break;
+						case 7:
+							_routes.smallBuses = routes[i].ways;
+						break;
 					}
-					cb(this._routes);
 				}
-      )
-      ;
-		}
+				cb(_routes);
+			}
+		)
+		;
 	}
 
 	public getRouteLine (
