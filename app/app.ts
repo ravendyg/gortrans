@@ -58,6 +58,15 @@ class MyApp implements OnInit {
       // Here you can do any higher level native things you might need.
       StatusBar.styleDefault();
     });
+
+    document.addEventListener(
+      "deviceready",
+      function onDeviceReady()
+      {
+        navigator['splashscreen'].hide();
+      },
+      false
+    );
   }
 
   public ngOnInit (): void
