@@ -135,3 +135,85 @@ $colors: (
   font-weight: 800;
   color: white;
 }
+
+.bottom-modal
+{
+  max-height: 100%;
+  height: 300px;
+  bottom: 0;
+  top: auto;
+}
+.veil
+{
+  background-color: rgba(50,50,50,0.3);
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+@media not all and (min-height: 600px) and (min-width: 768px)
+{
+  .veil
+  {
+    opacity: 1;
+  }
+}
+
+ion-backdrop
+{
+  background-color: rgba(50,50,50,0.3);
+}
+
+.stops-list-header
+{
+  position: fixed;
+  z-index: 10;
+  background-color: white;
+}
+
+.flex-header
+{
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-header-name
+{
+  flex: 1;
+}
+
+.flex-header-time
+{
+  padding-right: 10px;
+}
+
+.stops-list-item
+{
+  display: flex;
+  flex-direction: row;
+}
+
+@mixin stops-list-item-elem
+{
+  display: inline-block;
+  overflow: auto;
+}
+
+.stops-list-item-bus
+{
+  @include stops-list-item-elem;
+  width: 60px;
+}
+.stops-list-item-time
+{
+  @include stops-list-item-elem;
+  width: 70px;
+}
+.stops-list-item-next
+{
+  @include stops-list-item-elem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  flex: 1;
+}

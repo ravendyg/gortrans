@@ -4,7 +4,7 @@ import {Modal, Page, NavController, ViewController} from 'ionic-angular'
 import { Observable } from 'rxjs/Observable';
 import {TransportService} from '../../services/transport-service';
 
-// import {StopModal} from '../stop-modal/stop-modal';
+import {StopModal} from '../stop-modal/stop-modal';
 
 var _L: iL;
 var _map: iMap;
@@ -14,19 +14,6 @@ var _icons: {[id: string]: iIcon};
 
 var _labelsShown = false;
 
-
-@Component({
-  templateUrl: 'build/pages/stop-modal/stop-modal.html'
-})
-class StopModal
-{
-  constructor ( private viewCtrl: ViewController) {}
-
-  close ()
-	{
-    this.viewCtrl.dismiss();
-  }
-}
 
 @Component({
   templateUrl: 'build/pages/map/map.html'
@@ -175,12 +162,16 @@ window['mm'] = _map;
   {
     const elem = <HTMLDivElement>ev.target;
     if (elem.dataset && elem.dataset['type'] === 'stop')
-    {
-      let _stopModal = Modal.create(StopModal);
+    { // zoom
+      _map.setView(
+        {
+          lat: +(<String>elem.dataset['lat']),
+          lng: +(<String>elem.dataset['lng'])
+        }
+      );
+      // open modal
+      let _stopModal = Modal.create(StopModal, {stop: elem.dataset});
       this._navController.present( _stopModal );
-      // setTimeout(
-      //   () => this._ref.detectChanges()
-      // );
     }
   }
 
@@ -411,7 +402,7 @@ window['mm'] = marker;
       // store stop data into dataset
       marker._icon.dataset.type = 'stop';
       marker._icon.dataset.id   = e.id;
-      marker._icon.dataset.name = e.n;
+      marker._icon.dataset.name = e.n.replace('"', '\"');
       marker._icon.dataset.lat  = e.lat;
       marker._icon.dataset.lng  = e.lng;
 

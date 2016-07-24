@@ -1,36 +1,41 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-buttons start>
-      <button (click)="close()">Cancel</button>
-    </ion-buttons>
+<div
+  class="veil"
+  (click)="close()"
+>
+</div>
 
-    <ion-title>
-      Filter Sessions
-    </ion-title>
 
-    <ion-buttons end>
-      <button>Done</button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content class="outer-content">
+<ion-content class="outer-content bottom-modal">
 
   <ion-list>
-    <ion-list-header>Tracks</ion-list-header>
+    <div style="postion: relative">
+      <ion-list-header class="stops-list-header">
+        <div class="flex-header">
+          <div class="flex-header-name">{{stopData.name}}</div>
+          <div class="flex-header-time">{{timeToRefresh}}</div>
+        </div>
+      </ion-list-header>
+    </div>
 
-    <!--<ion-item *ngFor="let track of tracks" [attr.track]="track.name | lowercase">
-      <span item-left class="dot"></span>
-      <ion-label>{{track.name}}</ion-label>
-      <ion-toggle [(ngModel)]="track.isChecked" secondary></ion-toggle>
-    </ion-item>-->
+    <div style="height: 42px;"></div>
+    <div
+      [hidden]="buses.length > 0"
+      style="text-align: center; margin-top: 20px;"
+    >
+      Никто не едет  :(
+    </div>
 
-  </ion-list>
+    <ion-item *ngFor="let bus of buses">
+      <!--<ion-avatar item-left>
+        <img src="build/img/bus-stop.png">
+      </ion-avatar>-->
+      <div class="stops-list-item">
+        <div class="stops-list-item-bus">{{bus.title + ' ' + bus.type}}</div>
+        <div class="stops-list-item-time">{{bus.next + ' мин'}}</div>
+        <div class="stops-list-item-next">{{bus.dir}}</div>
+      </div>
+    </ion-item>
 
-  <ion-list>
-    <button ion-item  danger detail-none class="reset-filters">
-      Reset All Filters
-    </button>
   </ion-list>
 
 </ion-content>

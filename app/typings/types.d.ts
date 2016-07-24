@@ -118,4 +118,25 @@ declare type upToDateVerification =
 	use?: string	// url for proxy
 };
 
+declare type Forecast =
+{
+	id_marsh: string,
+	title: string,
+	marsh: string,
+	typetr: string,
+	direction: string,
+	markers:
+	{
+		id: string,
+		time: number
+	} [],
+	stop_end: string
+};
+
+declare type StopInfo =
+{
+	stopId: string,
+	forecasts: Forecast []
+}
+
 declare var PromiseAll: any;

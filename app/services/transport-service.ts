@@ -10,6 +10,14 @@ var timeToBusesRefreshLeft: number;
 var nextUpdateTimeSubs: any = {};
 var nextUpdateTimeSubId = 1;
 
+var stopInfoInterval = -1;
+var stopInfos: StopInfo [] = [];
+var stopSubs: { [id: string]: {stopId: string, cb: any, cbTime: any} } = {};
+var stopSubId = 0;
+
+var timeToStopsRefresh = 40;
+var stopsRefreshed = false;
+
 @Injectable()
 export /**
  * TransportService
@@ -160,6 +168,45 @@ class TransportService implements OnInit {
     this._startWatchingBuses();
   }
 
+  public subscribeToStops
+  (
+    stopId: string,
+    _cb: (forecast: Forecast []) => void,
+    _cbTime: (time: string) => void
+  ): () => any
+  {
+    stopSubs[''+(stopSubId++)] =
+    {
+      stopId,
+      cb: () =>
+      {
+        var stopInfo = stopInfos.find( e => e.stopId === stopId);
+        if ( stopInfo )
+        {
+          _cb(stopInfo.forecasts);
+        }
+      },
+      cbTime: (message) =>
+      {
+        _cbTime(message);
+      }
+    };
+
+    if ( Object.keys(stopSubs).length === 1 )
+      {
+        this._startWatchingStops();
+      }
+
+    return () =>
+    {
+      delete stopSubs[''+(stopSubId-1)];
+      if ( Object.keys(stopSubs).length === 0 )
+      {
+        this._stopWatchingStops();
+      }
+    }
+  }
+
   /**
    * call subscribed callbacks
    * @id - new line id
@@ -289,6 +336,77 @@ class TransportService implements OnInit {
   {
     this.setNextUpdateTime('');
     clearInterval(this._busWatcherId);
+  }
+
+  private _startWatchingStops ()
+  {
+    this._getStopInfos();
+
+    timeToStopsRefresh = 40;
+    for (var key in stopSubs)
+    {
+      stopSubs[key].cbTime(''+timeToStopsRefresh);
+    }
+
+    stopInfoInterval =
+      setInterval(
+        () =>
+        {
+          timeToStopsRefresh--;
+          if (timeToStopsRefresh < 0)
+          {
+            if (stopsRefreshed)
+            {
+              timeToStopsRefresh = 40;
+              this._sendStopsTimeLeftMsg(''+timeToStopsRefresh);
+            }
+          }
+          else if (timeToStopsRefresh === 0)
+          {
+            this._sendStopsTimeLeftMsg('Обновляю ...');
+            this._getStopInfos();
+          }
+          else
+          {
+            this._sendStopsTimeLeftMsg(''+timeToStopsRefresh);
+          }
+        },
+        1000
+      );
+  }
+
+  private _stopWatchingStops ()
+  {
+    clearInterval(stopInfoInterval);
+  }
+
+  private _getStopInfos ()
+  {
+    var targetedStops =
+      Object.keys(stopSubs)
+      .map( e => stopSubs[e].stopId )
+      ;
+
+    this._gortransService.getStopInfos(targetedStops)
+    .then(
+      ( stopInfosResp: { stopId: string, forecasts: Forecast []} [] ) =>
+      {
+        stopInfos = stopInfosResp;
+        for (var key in stopSubs)
+        {
+          stopSubs[key].cb();
+        }
+        stopsRefreshed = true;
+      }
+    )
+  }
+
+  private _sendStopsTimeLeftMsg (msg: string)
+  {
+    for (var key in stopSubs)
+    {
+      stopSubs[key].cbTime(msg);
+    }
   }
 
 }

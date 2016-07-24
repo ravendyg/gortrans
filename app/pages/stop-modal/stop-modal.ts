@@ -1,15 +1,117 @@
-import {Component} from '@angular/core';
-import {Modal, NavController, ViewController} from 'ionic-angular';
+import { Component, OnInit } from '@angular/core';
+import { Modal, NavController, ViewController, NavParams } from 'ionic-angular';
+
+import { TransportService } from '../../services/transport-service';
 
 @Component({
   templateUrl: 'build/pages/stop-modal/stop-modal.html'
 })
-export class StopModal
+export class StopModal implements OnInit
 {
-  constructor ( private viewCtrl: ViewController) {}
+  public stopData:
+  {
+    id: string,
+    lat: string,
+    lng: string,
+    name: string,
+    type: string
+  };
 
-  close ()
+  public buses:
+  {
+    title: string,
+    type:  string,
+    dir:   string,
+    next:  string
+  } [];
+
+  public timeToRefresh: string;
+
+  private _unsubscribeFromStops: any;
+
+  constructor
+  (
+    private viewCtrl: ViewController,
+    private params: NavParams,
+    private _transportService: TransportService
+  )
+  {
+    this.stopData = params.get('stop');
+
+    this.buses = [];
+
+    this.timeToRefresh = '';
+  }
+
+  public ngOnInit (): void
+  {
+    this._unsubscribeFromStops =
+      this._transportService.subscribeToStops(
+        this.stopData.id,
+        this._processForecasts.bind(this),
+        this._processTime.bind(this)
+      );
+  }
+
+  public close (): void
 	{
+    this._unsubscribeFromStops();
     this.viewCtrl.dismiss();
+  }
+
+  private _processForecasts
+  (
+    forecasts: Forecast []
+  ): void
+  {
+    this.buses =
+      forecasts.map(
+        e => {
+          var out =
+          {
+            title: e.title,
+            dir: e.stop_end,
+            next: ''+e.markers[0].time,
+            type: ''
+          };
+          switch (e.typetr) {
+						case '1':
+							out.type = 'а.';
+						break;
+						case '2':
+							out.type = 'тр.';
+						break;
+						case '3':
+							out.type = 'тм.';
+						break;
+						case '8':
+							out.type = 'м.т.';
+						break;
+					}
+          return out;
+        }
+      )
+      .sort(
+        (e1, e2) =>
+        {
+          return  +e1.next > +e2.next
+                    ? 1
+                    : +e1.next < +e2.next
+                      ? -1
+                      : 0;
+        }
+      )
+      .map(
+        e =>
+        {
+          e.next = +e.next > 0 ? e.next : '< 1';
+          return e;
+        }
+      );
+  }
+
+  private _processTime (time: string)
+  {
+    this.timeToRefresh = time;
   }
 }

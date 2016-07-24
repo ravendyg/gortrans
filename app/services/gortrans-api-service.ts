@@ -102,6 +102,65 @@ class GortransApiService implements OnInit{
 			);
 	}
 
+	/** get list of busses that are expected on the selected stops */
+	public getStopInfos
+	(
+		stopIds: string []
+	): Promise<{ stopId: string, forecasts: Forecast []} []>
+	{
+		return new Promise(
+			resolve =>
+			{
+				Promise.all(
+					stopIds.map(
+						e => this._getStopInfo(e)
+					)
+				)
+				.then(
+					(stopInfos: any) =>
+					{
+						resolve( stopInfos.filter(e => e.stopId) );
+					}
+				)
+				.catch(
+					err =>
+					{
+						console.error(err);
+						resolve([]);
+					}
+				)
+				;
+			}
+		);
+	}
+
+	private _getStopInfo (stopId: string): Promise<any>
+	{
+		return new Promise(
+			resolve =>
+			{
+			this._http
+				.get( this._config.rootUrl + this._config.forecast + stopId)
+				.map(
+					(resp: Response) => <Forecast []>(resp.json().routes)
+				)
+				.catch( this._handleHttpError )
+				.subscribe(
+					forecasts =>
+					{
+						resolve( {stopId, forecasts} );
+					},
+					err =>
+					{
+						console.error(err);
+						resolve( {} );
+					}
+				);
+				;
+			}
+		);
+	}
+
 	/** get buses coordinates
 	 *	@ids - merged  type + '-' + route
 	**/
