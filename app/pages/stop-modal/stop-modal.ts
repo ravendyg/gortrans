@@ -27,6 +27,8 @@ export class StopModal implements OnInit
 
   public timeToRefresh: string;
 
+  public noBuses: boolean;
+
   private _unsubscribeFromStops: any;
 
   constructor
@@ -51,6 +53,8 @@ export class StopModal implements OnInit
         this._processForecasts.bind(this),
         this._processTime.bind(this)
       );
+
+    this.noBuses = false;
   }
 
   public close (): void
@@ -108,6 +112,15 @@ export class StopModal implements OnInit
           return e;
         }
       );
+
+    if (this.buses.length === 0)
+    {
+      this.noBuses = true;
+    }
+    else
+    {
+      this.noBuses = false;
+    }
   }
 
   private _processTime (time: string)

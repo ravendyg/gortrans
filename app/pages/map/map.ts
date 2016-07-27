@@ -138,7 +138,7 @@ window['mm'] = _map;
     // prepare icons
     _icons['stop'] =  _L.icon({
       iconUrl: `build/img/bus-stop.png`,
-      iconSize: [46, 42],
+      iconSize: [30, 30],
       className: 'bus-stop-marker'
     });
 
