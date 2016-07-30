@@ -99,7 +99,7 @@ $colors: (
       display: inline-block;
       bottom: 14px;
       right: 5px;
-      width: 34px;
+      width: 54px;
       white-space: nowrap;
       text-align: right;
     }
@@ -220,4 +220,9 @@ ion-backdrop
 .stop-markers-visibility
 {
   opacity: 1;
+}
+
+.bus-markers
+{
+  z-index: -200 !important;
 }

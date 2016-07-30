@@ -207,7 +207,7 @@ class GortransApiService implements OnInit{
 							direction: e.direction,
 							lat: +e.lat,
 							lng: +e.lng,
-							time_nav: Date.parse(e.time_nav),
+							time_nav: e.time_nav,
 							azimuth: +e.azimuth,
 							rasp: e.rasp,
 							speed: +e.speed,

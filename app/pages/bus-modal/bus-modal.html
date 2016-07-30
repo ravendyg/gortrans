@@ -1,0 +1,32 @@
+<div
+  class="veil"
+  (click)="close()"
+>
+</div>
+
+
+<ion-content class="outer-content bottom-modal">
+
+  <ion-list>
+    <div style="postion: relative">
+      <ion-list-header class="stops-list-header">
+        <div>
+          {{busData.name + ' - ' + busData.time}}
+        </div>
+      </ion-list-header>
+    </div>
+
+    <div style="height: 42px;"></div>
+
+
+
+    <ion-item *ngFor="let stop of stops">
+      <div class="stops-list-item">
+        <div class="stops-list-item-bus">{{stop.time}}</div>
+        <div class="stops-list-item-next">{{stop.title}}</div>
+      </div>
+    </ion-item>
+
+  </ion-list>
+
+</ion-content>

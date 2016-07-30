@@ -5,6 +5,7 @@ import { Observable } from 'rxjs/Observable';
 import {TransportService} from '../../services/transport-service';
 
 import {StopModal} from '../stop-modal/stop-modal';
+import {BusModal} from '../bus-modal/bus-modal';
 
 var _L: iL;
 var _map: iMap;
@@ -106,6 +107,7 @@ export class MapPage implements OnInit, AfterViewChecked
       };
       startZoom = 11;
     }
+    if (startZoom > 18 || startZoom < 2) { startZoom = 11; }
 
     this._stopsHidden = true;
 
@@ -125,7 +127,7 @@ window['mm'] = _map;
       ((e: Event) =>
       {
         var i: number;
-        if (_map.getZoom() >= 13)
+        if (_map.getZoom() >= 14)
         { // show
           if (this._stopsHidden)
           {
@@ -165,7 +167,7 @@ window['mm'] = _map;
         Object.assign( targ.dataset, JSON.parse(stopModalStr) );
         targ.addEventListener(
           'click',
-          event => vm.showStopModal(event, true)
+          event => vm.showModal(event, true)
         );
         var ev = new MouseEvent('click');
         targ.dispatchEvent(ev);
@@ -210,7 +212,8 @@ window['mm'] = _map;
         _icons[`${keyType}-${angle}`] =
           _L.icon({
             iconUrl: `build/img/transport/${this._typeToNames[keyType]}-${angle}.png`,
-            iconSize: [46, 42]
+            iconSize: [46, 42],
+            className: 'bus-marker'
           });
       }
     }
@@ -313,7 +316,7 @@ window['mm'] = _map;
     }
   }
 
-  public showStopModal (ev: MouseEvent, oldState?: boolean)
+  public showModal (ev: MouseEvent, oldState?: boolean)
   {
     const elem = <HTMLDivElement>ev.target;
     if (elem.dataset && elem.dataset['type'] === 'stop')
@@ -334,6 +337,21 @@ window['mm'] = _map;
       if (!oldState) {
         localStorage.setItem('displayed-stop', JSON.stringify(elem.dataset) );
       }
+    }
+    else if (elem.dataset && elem.dataset['type'] === 'bus')
+    {
+      // zoom
+      _map.setView(
+        {
+          lat: +(<String>elem.dataset['lat']),
+          lng: +(<String>elem.dataset['lng'])
+        }
+      );
+      // open modal
+      let _busModal = Modal.create(BusModal, {bus: elem.dataset});
+      this._navController.present( _busModal );
+      // make emphasis on the selected bus
+      _fadeBuses(elem);
     }
   }
 
@@ -438,12 +456,36 @@ window['mm'] = _map;
             var azimuth = Math.floor( (Math.abs(e.azimuth+22.5)) / 45 )*45 % 360;
             const icon = _icons[`${key.split('-')[0]}-${azimuth}`]
 
+
             const marker = _L
               .marker({lat: e.lat, lng: e.lng}, {icon})
               .bindLabel(e.title, { noHide: true })
               .hideLabel()
               ;
             marker.addTo(_map);
+
+            // store bus data into dataset
+            marker._icon.dataset.type = 'bus';
+            switch (e.idTypetr)
+            {
+              case '1':
+                marker._icon.dataset.name = 'Автобус №' + e.title;
+              break;
+              case '2':
+                marker._icon.dataset.name = 'Троллейбус №' + e.title;
+              break;
+              case '3':
+                marker._icon.dataset.name = 'Трамвай №' + e.title;
+              break;
+              case '8':
+                marker._icon.dataset.name = 'Маршрутка №' + e.title;
+              break;
+            }
+            marker._icon.dataset.lat  = e.lat;
+            marker._icon.dataset.lng  = e.lng;
+            marker._icon.dataset.table = e.rasp;
+            marker._icon.dataset.time = e.time_nav;
+
             setTimeout(
               // otherwise they start at some random places?
               () => {
@@ -576,7 +618,6 @@ window['mm'] = _map;
         // .bindPopup(e.n)
         .addTo(_map)
         ;
-window['mm'] = marker;
 
       // store stop data into dataset
       marker._icon.dataset.type = 'stop';
@@ -641,6 +682,19 @@ function _fadeStops (target: string)
     if (stops[i].dataset['id'] !== target)
     {
       stops[i].style.opacity = '0.3';
+    }
+  }
+}
+
+/** make all buses except selected transparent */
+function _fadeBuses (target: HTMLDivElement)
+{
+  var buses = <NodeListOf<HTMLDivElement>>document.querySelectorAll('.bus-marker');
+  for (var i = 0; i < buses.length; i++)
+  {
+    if (buses[i] !== target)
+    {
+      buses[i].style.opacity = '0.3';
     }
   }
 }

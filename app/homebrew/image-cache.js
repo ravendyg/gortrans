@@ -10,13 +10,13 @@
 	var urlCreator = window.URL || window.webkitURL;
 
 	var getDB = new Promise(
-		(resolve, reject) =>
+		function (resolve, reject)
 		{
 			var request = indexedDB.open(dbName, 1);
 
 			request.addEventListener(
 				'upgradeneeded',
-				ev =>
+				function (ev)
 				{
 					var DB = ev.target.result;
 
@@ -31,7 +31,7 @@
 
 			request.addEventListener(
 				'success',
-				ev =>
+				function (ev)
 				{
 					resolve(
 						ev.target.result
@@ -41,7 +41,7 @@
 
 			request.addEventListener(
 				'error',
-				err =>
+				function (err)
 				{
 					reject(err);
 				}
@@ -64,11 +64,11 @@
 		init ()
 		{
 			this.c = new Promise(
-				(resolve, reject) =>
+				function (resolve, reject)
 				{
 					getDB
 					.then(
-						DB =>
+						function (DB)
 						{
 							cacheHandler.DB = DB;
 
@@ -77,7 +77,7 @@
 							const request = store.get('list');
 							request.addEventListener(
 								'success',
-								() =>
+								function ()
 								{
 									cacheHandler.links = request.result || {};
 									cacheHandler.initLinksSave();
@@ -86,7 +86,7 @@
 							);
 							request.addEventListener(
 								'error',
-								err =>
+								function (err)
 								{
 									cacheHandler.links = {};
 									cacheHandler.initLinksSave();
@@ -102,16 +102,15 @@
 		put (key, data)
 		{
 			return new Promise(
-				(resolve, reject) =>
+				function (resolve, reject)
 				{
-
 					// first put in db
 					const transaction = cacheHandler.DB.transaction([storeName], "readwrite");
 					const store = transaction.objectStore(storeName);
 					const request = store.put( { data, timestamp: Date.now() }, key);
 					request.addEventListener(
 						'success',
-						() =>
+						function ()
 						{
 							cacheHandler.links[key] = true;
 							resolve( true );
@@ -119,7 +118,7 @@
 					);
 					request.addEventListener(
 						'error',
-						err =>
+						function (err)
 						{
 							reject( err );
 						}
@@ -133,7 +132,7 @@
 		get (key)
 		{
 			return new Promise(
-				(resolve, reject) =>
+				function (resolve, reject)
 				{	// check memory first
 					if ( cacheHandler.blobs[key] )
 					{
@@ -147,7 +146,7 @@
 						const request = store.get(key);
 						request.addEventListener(
 							'success',
-							() =>
+							function ()
 							{
 								if ( request.result && request.result.data )
 								{// return data
@@ -170,7 +169,7 @@
 						);
 						request.addEventListener(
 							'error',
-							err =>
+							function (err)
 							{
 								reject( err );
 							}
@@ -183,17 +182,17 @@
 		fetch (link)
 		{
 			return new Promise(
-				(resolve, reject) =>
+				function (resolve, reject)
 				{
 					cacheHandler.c
 					.then(
-						() =>
+						function ()
 						{
 							if (cacheHandler.links[link])
 							{
 								cacheHandler.get(link)
 								.then(
-									blob =>
+									function (blob)
 									{
 										resolve(
 											urlCreator.createObjectURL( blob )
@@ -201,12 +200,12 @@
 									}
 								)
 								.catch(
-									err =>
+									function (err)
 									{	// don't expect normally be here
 										// reload
 										cacheHandler._http(link)
 										.then(
-											blob =>
+											function (blob)
 											{
 												resolve(
 													urlCreator.createObjectURL( blob )
@@ -221,7 +220,7 @@
 							{
 								cacheHandler._http(link)
 								.then(
-									blob =>
+									function (blob)
 									{
 										resolve(
 											urlCreator.createObjectURL( blob )
@@ -238,7 +237,7 @@
 		_http (link)
 		{
 			return new Promise(
-				(resolve, reject) =>
+				function (resolve, reject)
 				{
 					if ( navigator['network'].connection.type.toLowerCase().match('no network') )
 					{
@@ -271,12 +270,18 @@
 		initLinksSave ()
 		{
 			cacheHandler.interval = setInterval(
-				() => cacheHandler.saveLinks(),
+				function ()
+				{
+					cacheHandler.saveLinks();
+				},
 				1000 * 60 * 5
 			);
 			window.addEventListener(
 				'beforeunload',
-				() => cacheHandler.saveLinks()
+				function ()
+				{
+					cacheHandler.saveLinks();
+				}
 			);
 		},
 
