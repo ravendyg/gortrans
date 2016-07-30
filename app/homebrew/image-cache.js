@@ -240,23 +240,30 @@
 			return new Promise(
 				(resolve, reject) =>
 				{
-					var xhr = new XMLHttpRequest();
-					xhr.open( "GET", link, true );
-
-					xhr.responseType = "arraybuffer";
-
-					xhr.onload = function( e ) {
-						var blob = new Blob( [ this.response ], { type: "image/png" } );
-						cacheHandler.put(link, blob);
-
-						resolve(blob);
-					};
-
-					xhr.onerror = function (e) {
-						console.error(e);
+					if ( navigator['network'].connection.type.toLowerCase().match('no network') )
+					{
+						reject('no connection');
 					}
+					else
+					{
+						var xhr = new XMLHttpRequest();
+						xhr.open( "GET", link, true );
 
-					xhr.send();
+						xhr.responseType = "arraybuffer";
+
+						xhr.onload = function( e ) {
+							var blob = new Blob( [ this.response ], { type: "image/png" } );
+							cacheHandler.put(link, blob);
+
+							resolve(blob);
+						};
+
+						xhr.onerror = function (e) {
+							console.error(e);
+						}
+
+						xhr.send();
+					}
 				}
 			);
 		},

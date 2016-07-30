@@ -95,11 +95,17 @@ class GortransApiService implements OnInit{
 	**/
 	public getMarkers(ids: string [], cb: any): void
 	{
-		this._getMarkers(ids)
-			.subscribe(
-				cb,
-				console.log
-			);
+		if (
+			!(navigator['network'].connection.type.toLowerCase().match('no network')  ||
+        navigator['network'].connection.type === 'none' )
+			)
+		{
+			this._getMarkers(ids)
+				.subscribe(
+					cb,
+					console.log
+				);
+		}
 	}
 
 	/** get list of busses that are expected on the selected stops */
@@ -139,24 +145,35 @@ class GortransApiService implements OnInit{
 		return new Promise(
 			resolve =>
 			{
-			this._http
-				.get( this._config.rootUrl + this._config.forecast + stopId)
-				.map(
-					(resp: Response) => <Forecast []>(resp.json().routes)
-				)
-				.catch( this._handleHttpError )
-				.subscribe(
-					forecasts =>
-					{
-						resolve( {stopId, forecasts} );
-					},
-					err =>
-					{
-						console.error(err);
-						resolve( {} );
-					}
-				);
-				;
+				if (
+					( navigator['network'].connection.type.toLowerCase().match('no network')  ||
+            navigator['network'].connection.type === 'none' )
+					)
+				{
+					console.log('no connection');
+					resolve( {} );
+				}
+				else
+				{
+					this._http
+						.get( this._config.rootUrl + this._config.forecast + stopId)
+						.map(
+							(resp: Response) => <Forecast []>(resp.json().routes)
+						)
+						.catch( this._handleHttpError )
+						.subscribe(
+							forecasts =>
+							{
+								resolve( {stopId, forecasts} );
+							},
+							err =>
+							{
+								console.error(err);
+								resolve( {} );
+							}
+						);
+						;
+				}
 			}
 		);
 	}

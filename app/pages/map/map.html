@@ -28,7 +28,7 @@
 
   <div
     id="update-timer"
-    [hidden]="!timeToNextUpdateMessage"
+    [hidden]="!timeToNextUpdateMessage || !networkStatus"
     (click)="updateBusPositions()"
   >
     {{timeToNextUpdateMessage}}

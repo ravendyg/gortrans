@@ -5,7 +5,7 @@ import { Http, Response } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 
 
-const _apiRoot = 'http://localhost:3002';
+const _apiRoot = 'http://192.168.1.157:3002';
 // const _apiRoot = 'http://nskgortrans.info';
 
 @Injectable()

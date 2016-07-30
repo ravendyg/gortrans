@@ -186,40 +186,47 @@ function _syncronize (config: ConfigService): Promise<any>
 {
 	function main (resolve, reject)
 	{
-		GortransInfo.synchronize(_syncTimestamp)
-			.subscribe(
-				dat =>
-				{
-					const call1 = _updateRoutes(dat.routesFlag, dat.routes);
-					const call2 = _updateRouteLines(dat.trassFlag, dat.trasses);
-					const call3 = _updateBusStops(dat.trassFlag, dat.stops);
-					Observable.zip(call1, call2)
-						.subscribe(
-							res =>
-							{
-								localStorage.setItem('routesTimestamp', ''+getTimestamp());
-								resolve();
-							},
-							err =>
-							{
-								console.log(err);
-								// hope that there is data in DB
-								resolve();
-							}
-						);
-
-					if (dat.use)
+		if ( navigator['network'].connection.type.toLowerCase().match('no network') )
+		{
+			resolve();
+		}
+		else
+		{
+			GortransInfo.synchronize(_syncTimestamp)
+				.subscribe(
+					dat =>
 					{
-						config.changeRoot(dat.use);
+						const call1 = _updateRoutes(dat.routesFlag, dat.routes);
+						const call2 = _updateRouteLines(dat.trassFlag, dat.trasses);
+						const call3 = _updateBusStops(dat.trassFlag, dat.stops);
+						Observable.zip(call1, call2)
+							.subscribe(
+								res =>
+								{
+									localStorage.setItem('routesTimestamp', ''+getTimestamp());
+									resolve();
+								},
+								err =>
+								{
+									console.log(err);
+									// hope that there is data in DB
+									resolve();
+								}
+							);
+
+						if (dat.use)
+						{
+							config.changeRoot(dat.use);
+						}
+					},
+					err =>
+					{
+						console.log('sync error', (err));
+						// hope that there is data in DB
+						resolve();
 					}
-				},
-				err =>
-				{
-					console.log('sync error', (err));
-					// hope that there is data in DB
-					resolve();
-				}
-			);
+				);
+		}
 	}
 	return new Promise( main );
 }

@@ -41,6 +41,8 @@ export class MapPage implements OnInit, AfterViewChecked
 
   public timeToNextUpdateMessage: string;
 
+  public networkStatus: boolean;
+
   constructor(
     private _transportService: TransportService,
     private _navController: NavController
@@ -69,6 +71,8 @@ export class MapPage implements OnInit, AfterViewChecked
     };
 
     this.timeToNextUpdateMessage = '';
+
+    this.networkStatus = false;
 
     _icons = {};
   }
@@ -169,7 +173,6 @@ window['mm'] = _map;
     navigator.geolocation.watchPosition(
       position =>
       {
-        console.log(position);
         if (!userMarker)
         { // first run
           userPosition =
@@ -197,7 +200,35 @@ window['mm'] = _map;
         console.log(e)
       },
       { maximumAge: 10000, timeout: 5000, enableHighAccuracy: false }
-    )
+    );
+
+    // internet commection status
+    var netStatInt =
+      setInterval(
+        () =>
+        {
+          if (
+            ( navigator['network'].connection.type.toLowerCase().match('no network')  ||
+              navigator['network'].connection.type === 'none' )                       &&
+            this.networkStatus
+          )
+          {
+            this.networkStatus = false;
+            window['plugins'].toast.show('Нет соединения с интернетом, работаю в оффлайн режиме', "long", 'bottom');
+          }
+          else if (
+            !( navigator['network'].connection.type.toLowerCase().match('no network') ||
+              navigator['network'].connection.type === 'none' )                       &&
+            !this.networkStatus
+          )
+          {
+            this.networkStatus = true;
+            window['plugins'].toast.show('Соединение с интернетом установлено', "long", 'bottom');
+          }
+
+        },
+        1000*5
+      );
   }
 
   public zoomToUser ()
@@ -208,7 +239,7 @@ window['mm'] = _map;
     }
     else
     {
-      console.log('can\'t find');
+      window['plugins'].toast.show('Не могу вас найти', "long", 'bottom');
     }
   }
 
