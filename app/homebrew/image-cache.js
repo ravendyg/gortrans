@@ -9,7 +9,24 @@
 
 	var urlCreator = window.URL || window.webkitURL;
 
-	var getDB = new Promise(
+	/**
+   * conver a buffer to a string
+   */
+  function ab2str(buf) {
+    return String.fromCharCode.apply(null, new Uint8Array(buf));
+  }
+
+	function str2ab (str)
+	{  // to hadle image rsponses
+		var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
+		var bufView = new Uint8Array(buf);
+		for (var i=0, strLen=str.length; i<strLen; i++) {
+				bufView[i] = str.charCodeAt(i);
+		}
+		return buf;
+	}
+
+	var getDB = new PromisePoly(
 		function (resolve, reject)
 		{
 			var request = indexedDB.open(dbName, 1);
@@ -53,7 +70,7 @@
 	/**
 	 * save data into cache
 	 */
-	const cacheHandler =
+	var cacheHandler =
 	{
 		c: null,
 		links: null,
@@ -61,9 +78,9 @@
 		DB: null,
 		interval: -1,
 		/** open DB */
-		init ()
+		init: function ()
 		{
-			this.c = new Promise(
+			this.c = new PromisePoly(
 				function (resolve, reject)
 				{
 					getDB
@@ -72,15 +89,15 @@
 						{
 							cacheHandler.DB = DB;
 
-							const transaction = DB.transaction([storeName], "readwrite");
-							const store = transaction.objectStore(storeName);
-							const request = store.get('list');
+							var transaction = DB.transaction([storeName], "readwrite");
+							var store = transaction.objectStore(storeName);
+							var request = store.get('list');
 							request.addEventListener(
 								'success',
 								function ()
 								{
 									cacheHandler.links = request.result || {};
-									cacheHandler.initLinksSave();
+									// cacheHandler.initLinksSave();
 									resolve(true);
 								}
 							);
@@ -89,7 +106,7 @@
 								function (err)
 								{
 									cacheHandler.links = {};
-									cacheHandler.initLinksSave();
+									// cacheHandler.initLinksSave();
 									resolve(true);
 								}
 							);
@@ -99,21 +116,22 @@
 			);
 		},
 		/** put request into DB */
-		put (key, data)
+		put: function (key, data)
 		{
-			return new Promise(
+			return new PromisePoly(
 				function (resolve, reject)
 				{
 					// first put in db
-					const transaction = cacheHandler.DB.transaction([storeName], "readwrite");
-					const store = transaction.objectStore(storeName);
-					const request = store.put( { data, timestamp: Date.now() }, key);
+					var transaction = cacheHandler.DB.transaction([storeName], "readwrite");
+					var store = transaction.objectStore(storeName);
+					var request = store.put( { data: data, timestamp: Date.now() }, key);
 					request.addEventListener(
 						'success',
 						function ()
 						{
 							cacheHandler.links[key] = true;
 							resolve( true );
+							cacheHandler.saveLinks();
 						}
 					);
 					request.addEventListener(
@@ -129,9 +147,9 @@
 			);
 		},
 		/** get request from DB */
-		get (key)
+		get: function (key)
 		{
-			return new Promise(
+			return new PromisePoly(
 				function (resolve, reject)
 				{	// check memory first
 					if ( cacheHandler.blobs[key] )
@@ -141,15 +159,17 @@
 					else
 					{
 						// then db
-						const transaction = cacheHandler.DB.transaction([storeName], "readwrite");
-						const store = transaction.objectStore(storeName);
-						const request = store.get(key);
+						var transaction = cacheHandler.DB.transaction([storeName], "readwrite");
+						var store = transaction.objectStore(storeName);
+						var request = store.get(key);
 						request.addEventListener(
 							'success',
 							function ()
 							{
 								if ( request.result && request.result.data )
 								{// return data
+									var arrayBufferView = str2ab(request.result.data);
+									var blob = new Blob( [ arrayBufferView ], { type: "image/png" } );
 									resolve( request.result.data );
 								}
 								else
@@ -179,9 +199,9 @@
 			);
 		},
 
-		fetch (link)
+		fetch: function (link)
 		{
-			return new Promise(
+			return new PromisePoly(
 				function (resolve, reject)
 				{
 					cacheHandler.c
@@ -194,9 +214,8 @@
 								.then(
 									function (blob)
 									{
-										resolve(
-											urlCreator.createObjectURL( blob )
-										);
+										var url = urlCreator.createObjectURL( blob );
+										resolve(url);
 									}
 								)
 								.catch(
@@ -207,9 +226,8 @@
 										.then(
 											function (blob)
 											{
-												resolve(
-													urlCreator.createObjectURL( blob )
-												);
+												var url = urlCreator.createObjectURL( blob );
+												resolve(url);
 											}
 										);
 									}
@@ -222,9 +240,8 @@
 								.then(
 									function (blob)
 									{
-										resolve(
-											urlCreator.createObjectURL( blob )
-										);
+										var url = urlCreator.createObjectURL( blob );
+										resolve(url);
 									}
 								);
 							}
@@ -234,9 +251,9 @@
 			);
 		},
 
-		_http (link)
+		_http: function (link)
 		{
-			return new Promise(
+			return new PromisePoly(
 				function (resolve, reject)
 				{
 					if ( navigator['network'].connection.type.toLowerCase().match('no network') )
@@ -252,7 +269,11 @@
 
 						xhr.onload = function( e ) {
 							var blob = new Blob( [ this.response ], { type: "image/png" } );
-							cacheHandler.put(link, blob);
+							var arrayBufferView = new Uint8Array( this.response );
+
+							// make a string to put into db
+							var respStr = ab2str(arrayBufferView);
+							cacheHandler.put(link, respStr);
 
 							resolve(blob);
 						};
@@ -267,29 +288,29 @@
 			);
 		},
 
-		initLinksSave ()
-		{
-			cacheHandler.interval = setInterval(
-				function ()
-				{
-					cacheHandler.saveLinks();
-				},
-				1000 * 60 * 5
-			);
-			window.addEventListener(
-				'beforeunload',
-				function ()
-				{
-					cacheHandler.saveLinks();
-				}
-			);
-		},
+		// initLinksSave: function ()
+		// {
+		// 	cacheHandler.interval = setInterval(
+		// 		function ()
+		// 		{
+		// 			cacheHandler.saveLinks();
+		// 		},
+		// 		1000 * 60 * 5
+		// 	);
+		// 	window.addEventListener(
+		// 		'beforeunload',
+		// 		function ()
+		// 		{
+		// 			cacheHandler.saveLinks();
+		// 		}
+		// 	);
+		// },
 
-		saveLinks ()
+		saveLinks: function ()
 		{
-			const transaction = cacheHandler.DB.transaction([storeName], "readwrite");
-			const store = transaction.objectStore(storeName);
-			const request = store.put(cacheHandler.links, 'list');
+			var transaction = cacheHandler.DB.transaction([storeName], "readwrite");
+			var store = transaction.objectStore(storeName);
+			var request = store.put(cacheHandler.links, 'list');
 		}
 	}
 	cacheHandler.init();

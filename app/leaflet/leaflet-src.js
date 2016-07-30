@@ -2866,7 +2866,10 @@ L.TileLayer = L.Class.extend({
 
 			imageCache.fetch( link )
 			.then(
-				image => resolve(image)
+				function (image)
+				{
+					resolve(image);
+					}
 			);
 
 			// const req = new Request(link);

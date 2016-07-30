@@ -2,12 +2,12 @@
   <div id="bus-icons-list">
     <div
       *ngFor="let icon of busIcons; trackBy: icon?.id"
-      class="route-icon"
+      class="bus-icons-list-route-icon"
       data-type="icon-div"
       [attr.data-id]="icon.id"
     >
-      <span class="icon-name {{icon.color}}">{{icon.name}}</span>
-      <img [src]="icon.img">
+      <span class="bus-icons-list-route-name {{icon.color}}">{{icon.name}}</span>
+      <img [src]="icon.img" class="bus-icons-list-route-img">
     </div>
   </div>
 

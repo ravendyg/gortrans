@@ -30,7 +30,6 @@ export class MapPage implements OnInit, AfterViewChecked
 
   private _trackMapSize: boolean;
   private _actualRouteLines: actualRoute;
-  private _swipeouts: any [];
   private _stopsHidden: boolean;
 
   // constants
@@ -60,8 +59,6 @@ export class MapPage implements OnInit, AfterViewChecked
     this.busIcons = [];
 
     this._routeColors = ['blue', 'green', 'red'];
-
-    this._swipeouts = [];
 
     this._typeToNames =
     {
@@ -413,12 +410,15 @@ window['mm'] = _map;
       Observable
         .interval(50)
         .takeUntil( Observable.fromEvent(document,'touchend') )
+        .takeUntil( Observable.fromEvent(document,'mouseup') )
         ;
 
     const sub = move.subscribe(
       vl =>
       {
         target.style.transform =
+          vl % 2 === 0 ? `rotate(10deg)` : `rotate(-10deg)`;
+        target.style['-webkit-transform'] =
           vl % 2 === 0 ? `rotate(10deg)` : `rotate(-10deg)`;
       },
       er => {},
@@ -427,6 +427,7 @@ window['mm'] = _map;
         if (Date.now() - start < 1000)
         {
           target.style.transform = `rotate(0deg)`;
+          target.style['-webkit-transform'] = `rotate(0deg)`;
           this.zoomToRoute(id);
         }
         if (Date.now() - start >= 1000)
