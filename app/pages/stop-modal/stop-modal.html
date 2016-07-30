@@ -18,6 +18,9 @@
     </div>
 
     <div style="height: 42px;"></div>
+    <div [hidden]="!loading" style="text-align: center; margin: 10px;">
+      <ion-spinner></ion-spinner>
+    </div>
     <div
       [hidden]="!noBuses"
       style="text-align: center; margin-top: 20px;"
@@ -26,9 +29,6 @@
     </div>
 
     <ion-item *ngFor="let bus of buses">
-      <!--<ion-avatar item-left>
-        <img src="build/img/bus-stop.png">
-      </ion-avatar>-->
       <div class="stops-list-item">
         <div class="stops-list-item-bus">{{bus.title + ' ' + bus.type}}</div>
         <div class="stops-list-item-time">{{bus.next + ' мин'}}</div>

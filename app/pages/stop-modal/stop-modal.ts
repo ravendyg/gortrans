@@ -28,6 +28,7 @@ export class StopModal implements OnInit
   public timeToRefresh: string;
 
   public noBuses: boolean;
+  public loading: boolean;
 
   private _unsubscribeFromStops: any;
 
@@ -41,6 +42,7 @@ export class StopModal implements OnInit
     this.stopData = params.get('stop');
 
     this.buses = [];
+    this.loading = true;
 
     this.timeToRefresh = '';
   }
@@ -131,6 +133,7 @@ export class StopModal implements OnInit
     {
       this.noBuses = false;
     }
+    this.loading = false;
   }
 
   private _processTime (time: string)
