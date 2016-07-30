@@ -61,6 +61,14 @@ export class StopModal implements OnInit
 	{
     this._unsubscribeFromStops();
     this.viewCtrl.dismiss();
+
+    /** show all stops back */
+    var stops = <NodeListOf<HTMLDivElement>>document.querySelectorAll('.stop-markers-visibility');
+    for (var i = 0; i < stops.length; i++)
+    {
+      stops[i].style.opacity = '1';
+    }
+
   }
 
   private _processForecasts

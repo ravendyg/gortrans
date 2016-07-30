@@ -139,7 +139,7 @@ window['mm'] = _map;
     _icons['stop'] =  _L.icon({
       iconUrl: `build/img/bus-stop.png`,
       iconSize: [30, 30],
-      className: 'bus-stop-marker'
+      className: 'bus-stop-marker stop-markers-visibility'
     });
 
     for (var keyType in this._typeToNames)
@@ -172,6 +172,8 @@ window['mm'] = _map;
       // open modal
       let _stopModal = Modal.create(StopModal, {stop: elem.dataset});
       this._navController.present( _stopModal );
+      // make emphasis on the selected stop
+      _fadeStops(elem);
     }
   }
 
@@ -443,12 +445,25 @@ function _changeCSSRule (selector: string, newRule: string): void
 
 function _hideLabels ()
 {
-  _changeCSSRule('.leaflet-label', " { visibility: hidden !important; }");
+  _changeCSSRule('.leaflet-label', "{ visibility: hidden !important; }");
   _labelsShown = true;
 }
 
 function _showLabels ()
 {
-  _changeCSSRule('.leaflet-label', " {}");
+  _changeCSSRule('.leaflet-label', "{}");
   _labelsShown = true;
+}
+
+/** make all stops except selected transparent */
+function _fadeStops (target: HTMLDivElement)
+{
+  var stops = <NodeListOf<HTMLDivElement>>document.querySelectorAll('.stop-markers-visibility');
+  for (var i = 0; i < stops.length; i++)
+  {
+    if (stops[i] !== target)
+    {
+      stops[i].style.opacity = '0.3';
+    }
+  }
 }
