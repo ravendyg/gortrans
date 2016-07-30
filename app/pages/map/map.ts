@@ -14,6 +14,12 @@ var _icons: {[id: string]: iIcon};
 
 var _labelsShown = false;
 
+var userPosition:latLng =
+{
+  lat: 0,
+  lng: 0
+};
+
 
 @Component({
   templateUrl: 'build/pages/map/map.html'
@@ -156,6 +162,54 @@ window['mm'] = _map;
 
     // icon menu manipulation
     document.addEventListener('touchstart', this._initSwipeout.bind(this));
+
+    // user's position
+    var userMarker;
+
+    navigator.geolocation.watchPosition(
+      position =>
+      {
+        console.log(position);
+        if (!userMarker)
+        { // first run
+          userPosition =
+          {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          userMarker =  _L.marker(userPosition);
+          userMarker.addTo(_map);
+        }
+        else
+        {
+          userPosition =
+          {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          _map.removeLayer( userMarker );
+          userMarker.setLatLng(userPosition);
+          userMarker.addTo(_map);
+        }
+      },
+      e =>
+      {
+        console.log(e)
+      },
+      { maximumAge: 10000, timeout: 5000, enableHighAccuracy: false }
+    )
+  }
+
+  public zoomToUser ()
+  {
+    if ( userPosition.lat )
+    {
+      _map.setView( userPosition );
+    }
+    else
+    {
+      console.log('can\'t find');
+    }
   }
 
   public showStopModal (ev: MouseEvent)

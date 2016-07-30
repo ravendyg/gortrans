@@ -11,9 +11,12 @@
     </div>
   </div>
 
-  <ion-buttons start style="position: fixed;">
+  <ion-buttons start style="position: fixed; height: 80%;">
     <button fab fab-top menuToggle style="margin-left: 15px;">
       <ion-icon name="search"></ion-icon>
+    </button>
+    <button fab fab-bottom (click)="zoomToUser()" style="margin-left: 15px;">
+      <ion-icon name="pin"></ion-icon>
     </button>
   </ion-buttons>
 
