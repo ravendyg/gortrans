@@ -72,7 +72,7 @@ export class MapPage implements OnInit, AfterViewChecked
 
     this.timeToNextUpdateMessage = '';
 
-    this.networkStatus = false;
+    this.networkStatus = true;
 
     _icons = {};
   }

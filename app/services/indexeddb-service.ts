@@ -128,7 +128,7 @@ class IndexedDbService {
 			() =>
 			{
 				if (routesUpdateNeeded)
-				{	// something changed, exec callback again to refresh onthe user's side
+				{	// something changed, exec callback again to refresh on the user's side
 					loadRouteLineFromDB(id)
 					.then(
 						(line: trassPoint []) =>
@@ -186,11 +186,27 @@ function _syncronize (config: ConfigService): Promise<any>
 {
 	function main (resolve, reject)
 	{
-		if ( navigator['network'].connection.type.toLowerCase().match('no network') )
+		var interval = -1;
+		if ( _checkConnection() )
 		{
-			resolve();
+			performSync();
 		}
 		else
+		{
+			interval =
+				setInterval(
+					() =>
+					{
+						if ( _checkConnection() )
+						{
+							clearInterval(interval);
+							performSync();
+						}
+					},
+					2000
+				);
+		}
+		function performSync ()
 		{
 			GortransInfo.synchronize(_syncTimestamp)
 				.subscribe(
@@ -350,4 +366,19 @@ function putIntoDb (store, data, key)
 function getTimestamp ()
 {
 	return Math.round( Date.now() / 1000 );/// 60 / 60 / 24);
+}
+
+function _checkConnection ()
+{
+	if (
+				( navigator['network'].connection.type.toLowerCase().match('no network')  ||
+					navigator['network'].connection.type === 'none' )
+			)
+	{
+		return false
+	}
+	else
+	{
+		return true;
+	}
 }
