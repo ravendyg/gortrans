@@ -157,6 +157,20 @@ window['mm'] = _map;
           vm._transportService.selectRoute(routes[k].type, routes[k].route, routes[k].name, true);
         }
       }
+
+      var stopModalStr = localStorage.getItem('displayed-stop');
+      if (stopModalStr && stopModalStr !== 'undefined')
+      {
+        var targ = document.createElement('div');
+        Object.assign( targ.dataset, JSON.parse(stopModalStr) );
+        targ.addEventListener(
+          'click',
+          event => vm.showStopModal(event, true)
+        );
+        var ev = new MouseEvent('click');
+        targ.dispatchEvent(ev);
+      }
+
       tileLayer.off( 'load', restoreState );
     };
 
@@ -267,21 +281,6 @@ window['mm'] = _map;
         1000*5
       );
 
-      // // restore app state
-      // var _dispStop = localStorage.getItem('displayed-stop');
-      // if (_dispStop)
-      // {
-      //   var syntheticEvent = new MouseEvent('click');
-      //   var target = document.createElement('div');
-      //   target.dataset = JSON.parse(_dispStop);
-      //   target.dispatchEvent( syntheticEvent );
-      //   console.log(syntheticEvent);
-
-      //   // syntheticEvent.target = {};
-      //   // syntheticEvent.target.dataset = JSON.parse(_dispStop);
-      //   // this.showStopModal(<MouseEvent>syntheticEvent)
-      // }
-
       setInterval(
         saveMapData,
         1000 * 10
@@ -314,7 +313,7 @@ window['mm'] = _map;
     }
   }
 
-  public showStopModal (ev: MouseEvent)
+  public showStopModal (ev: MouseEvent, oldState?: boolean)
   {
     const elem = <HTMLDivElement>ev.target;
     if (elem.dataset && elem.dataset['type'] === 'stop')
@@ -332,7 +331,9 @@ window['mm'] = _map;
       _fadeStops(elem.dataset['id']);
 
       // save state to local storage
-      localStorage.setItem('displayed-stop', JSON.stringify(elem.dataset) );
+      if (!oldState) {
+        localStorage.setItem('displayed-stop', JSON.stringify(elem.dataset) );
+      }
     }
   }
 
