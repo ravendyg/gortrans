@@ -22,6 +22,7 @@ interface iMap
 	on: (event: string, cb: (event?: Event) => void) => this;
 	off: (event: string, cb: (event?: Event) => void) => this;
 	getZoom: () => number;
+	getCenter: () => latLng;
 }
 
 interface iLayer

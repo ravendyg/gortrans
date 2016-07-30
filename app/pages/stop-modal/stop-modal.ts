@@ -69,6 +69,8 @@ export class StopModal implements OnInit
       stops[i].style.opacity = '1';
     }
 
+    // clear state in local storage
+    localStorage.setItem('displayed-stop', '' );
   }
 
   private _processForecasts

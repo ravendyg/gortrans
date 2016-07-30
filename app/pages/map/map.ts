@@ -79,13 +79,34 @@ export class MapPage implements OnInit, AfterViewChecked
 
   public ngOnInit (): void
   {
+    var vm = this;
     // map intialization
+    var initMapSettngs, startZoom, startCoords;
     _L = window['L'];
     const southWest = _L.latLng(30, 10),
           northEast = _L.latLng(80, 200),
           bounds = _L.latLngBounds(southWest, northEast);
-    const startCoords = {lat: 54.908593335436926, lng: 83.0291748046875};
-    const startZoom = 11;
+    try
+    {
+      var mapStr = localStorage.getItem('map');
+      initMapSettngs = JSON.parse(mapStr);
+      startCoords =
+      {
+        lat: initMapSettngs.center.lat || 54.908593335436926,
+        lng: initMapSettngs.center.lng || 83.0291748046875
+      };
+      startZoom = initMapSettngs.zoom | 11;
+    }
+    catch (e)
+    {
+      startCoords =
+      {
+        lat: 54.908593335436926,
+        lng: 83.0291748046875
+      };
+      startZoom = 11;
+    }
+
     this._stopsHidden = true;
 
     _map = _L.map('map', {
@@ -93,7 +114,7 @@ export class MapPage implements OnInit, AfterViewChecked
         maxBounds: bounds
     }).setView(startCoords, startZoom);
 window['mm'] = _map;
-    _L.tileLayer.provider('OpenStreetMap.HOT').addTo(_map);
+    var tileLayer = _L.tileLayer.provider('OpenStreetMap.HOT').addTo(_map);
 
     document.querySelector('.leaflet-control-zoom').remove();
     document.querySelector('.leaflet-control-attribution').remove();
@@ -122,6 +143,22 @@ window['mm'] = _map;
         }
       }).bind(this)
     );
+
+    // restore state
+    tileLayer.on( 'load', restoreState );
+    function restoreState ()
+    {
+      var routesStr = localStorage.getItem('routes'), routes;
+      if (routesStr && routesStr !== 'undefined')
+      {
+        routes = JSON.parse(routesStr);
+        for (var k = 0; k < routes.length; k++)
+        {
+          vm._transportService.selectRoute(routes[k].type, routes[k].route, routes[k].name, true);
+        }
+      }
+      tileLayer.off( 'load', restoreState );
+    };
 
     // subscribe to searched routes updates
     this._transportService.subscribeForAddLineOnMap(
@@ -229,6 +266,40 @@ window['mm'] = _map;
         },
         1000*5
       );
+
+      // // restore app state
+      // var _dispStop = localStorage.getItem('displayed-stop');
+      // if (_dispStop)
+      // {
+      //   var syntheticEvent = new MouseEvent('click');
+      //   var target = document.createElement('div');
+      //   target.dataset = JSON.parse(_dispStop);
+      //   target.dispatchEvent( syntheticEvent );
+      //   console.log(syntheticEvent);
+
+      //   // syntheticEvent.target = {};
+      //   // syntheticEvent.target.dataset = JSON.parse(_dispStop);
+      //   // this.showStopModal(<MouseEvent>syntheticEvent)
+      // }
+
+      setInterval(
+        saveMapData,
+        1000 * 10
+      );
+      // and on pause
+      document.addEventListener( 'pause', saveMapData );
+      function saveMapData ()
+      {
+        localStorage.setItem(
+          'map',
+          JSON.stringify(
+            {
+              zoom: _map.getZoom(),
+              center: _map.getCenter()
+            }
+          )
+        );
+      };
   }
 
   public zoomToUser ()
@@ -258,7 +329,10 @@ window['mm'] = _map;
       let _stopModal = Modal.create(StopModal, {stop: elem.dataset});
       this._navController.present( _stopModal );
       // make emphasis on the selected stop
-      _fadeStops(elem);
+      _fadeStops(elem.dataset['id']);
+
+      // save state to local storage
+      localStorage.setItem('displayed-stop', JSON.stringify(elem.dataset) );
     }
   }
 
@@ -396,13 +470,20 @@ window['mm'] = _map;
     }
   }
 
-  private _newLineOnMapCb (id: string, name: string, trass: trassPoint [], instead: string): void
+  private _newLineOnMapCb
+  (
+    id: string,
+    name: string,
+    trass: trassPoint [],
+    instead: string,
+    oldState?: boolean
+  ): void
   {
     if (instead)
     {
       this._removeRouteOnMap(instead);
     }
-    this._addRouteOnMap(id, name, trass);
+    this._addRouteOnMap(id, name, trass, oldState);
   }
 
   /**
@@ -423,6 +504,16 @@ window['mm'] = _map;
       delete this._actualRouteLines[id];
       // remove icon
       this.busIcons = this.busIcons.filter( e => e.id !== id );
+
+      // update state
+      var routesStr = localStorage.getItem('routes'), routes;
+      if (routesStr && routesStr !== 'undefined')
+      {
+        routes = JSON.parse(routesStr);
+        var [type, route] = id.split('-');
+        routes = routes.filter( e => e.type !== +type || e.route !== route );
+      }
+      localStorage.setItem('routes', JSON.stringify(routes));
     }
 
     // remove buses from the map
@@ -442,7 +533,13 @@ window['mm'] = _map;
   /**
    * create route polyline and display it on the map
    */
-  private _addRouteOnMap (id: string, name: string, trass: trassPoint []): void
+  private _addRouteOnMap
+  (
+    id: string,
+    name: string,
+    trass: trassPoint [],
+    oldState?: boolean
+  ): void
   {
     const color = this._routeColors.pop();
 
@@ -462,19 +559,13 @@ window['mm'] = _map;
       stops,
       color
     };
-    _map.fitBounds(this._actualRouteLines[id].route.getBounds());
+    if (!oldState) { _map.fitBounds(this._actualRouteLines[id].route.getBounds()); }
 
     var type = id.split('-')[0];
-    // name = name.replace(/^0*/, '');
 
     const img = `build/img/${this._typeToNames[type]}.png`;
 
     this.busIcons.push( { id, color, img, name } );
-    // doesn't want to propagate changes into view without this hack
-    // NgZone didn't work either
-    // setTimeout(
-    //   () => this._ref.detectChanges()
-    // );
 
     // not pure !!!
     function _createStopMarker (e)
@@ -541,12 +632,12 @@ function _showLabels ()
 }
 
 /** make all stops except selected transparent */
-function _fadeStops (target: HTMLDivElement)
+function _fadeStops (target: string)
 {
   var stops = <NodeListOf<HTMLDivElement>>document.querySelectorAll('.stop-markers-visibility');
   for (var i = 0; i < stops.length; i++)
   {
-    if (stops[i] !== target)
+    if (stops[i].dataset['id'] !== target)
     {
       stops[i].style.opacity = '0.3';
     }

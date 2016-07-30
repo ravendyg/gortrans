@@ -57,14 +57,16 @@ class TransportService implements OnInit {
   (
     type: number,
     route: string,
-    name: string
+    name: string,
+    oldState?: boolean
   ): void
   {
     this._gortransService.getRouteLine(
       route,
       type,
       name,
-      this._getRouteLinesCallback.bind(this)
+      this._getRouteLinesCallback.bind(this),
+      oldState
     );
   }
 
@@ -72,7 +74,8 @@ class TransportService implements OnInit {
   (
     id: string,
     name: string,
-    trass: trassPoint []
+    trass: trassPoint [],
+    oldState?: boolean
   ): void
   {
     var instead: string = null;
@@ -102,7 +105,7 @@ class TransportService implements OnInit {
     // call subscribers
     if (lineIsNew)
     {
-      this._runLinesOnMapChangeSubs(id, name, trass, instead);
+      this._runLinesOnMapChangeSubs(id, name, trass, instead, oldState);
       this._startWatchingBuses();
     }
   }
@@ -218,12 +221,13 @@ class TransportService implements OnInit {
     id: string,
     name: string,
     trass: trassPoint [],
-    instead: string
+    instead: string,
+    oldState?: boolean
   ): void
   {
     for (var key in this._addLineOnMapSubs)
     {
-      this._addLineOnMapSubs[key](id, name, trass, instead);
+      this._addLineOnMapSubs[key](id, name, trass, instead, oldState);
     }
   }
 

@@ -69,7 +69,8 @@ class GortransApiService implements OnInit{
 		route: string,
 		type: number,
 		name: string,
-		cb: (id: string, name: string, route: trassPoint []) => any
+		cb: (id: string, name: string, route: trassPoint [], oldState?: boolean) => any,
+		oldState?: boolean
 	): void
 	{
 		const id = type + '-' + route;
@@ -84,7 +85,7 @@ class GortransApiService implements OnInit{
 				((trass: trassPoint []) =>
 				{
 					this._lines[id] = trass;
-					cb( id, name, trass);
+					cb( id, name, trass, oldState);
 				}).bind(this)
 			);
 		}

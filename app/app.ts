@@ -110,6 +110,31 @@ class MyApp implements OnInit {
   {
     this._transportService.selectRoute(type, route, name);
     this.menu.getMenus()[0].close();
+
+    // save state
+    var routesStr = localStorage.getItem('routes'), routes;
+    if (routesStr && routesStr !== 'undefined')
+    {
+      routes = JSON.parse(routesStr);
+      // do not make duplicates
+      for (var t = 0; t < routes.length; t++)
+      {
+        if (routes[t].type === type && routes[t].route === route)
+        {
+          return;
+        }
+      }
+      if (routes.length > 2)
+      {
+        routes = routes.slice(1);
+      }
+    }
+    else
+    {
+      routes = [];
+    }
+    routes.push({ type, route, name });
+    localStorage.setItem('routes', JSON.stringify(routes));
   }
 
   // openPage(page)
